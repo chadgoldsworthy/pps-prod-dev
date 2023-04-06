@@ -1,0 +1,138 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"value": "ppsi-synapse-prod"
+		},
+		"AzureDatabricksLinkedService_accessToken": {
+			"value": ""
+		},
+		"data_lake_dev_connectionString": {
+			"value": ""
+		},
+		"pps_edw_dev_db_connectionString": {
+			"value": ""
+		},
+		"ppsi-synapse-prod-WorkspaceDefaultSqlServer_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:ppsi-synapse-prod.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"pps-synapse-dev-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"value": "https://ppsidatalakestg.dfs.core.windows.net"
+		},
+		"ppsi-synapse-prod-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"value": "https://ppsidatalakestg.dfs.core.windows.net"
+		},
+		"Authorised_Representative_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Broker_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Brokerage_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Commission_Statement_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Country_Codes_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Daily_Holdings_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Deal_New_file_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Distribution_Component_Master_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Distribution_Component_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Distriution_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Entity_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Fee_Statement_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Fund_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Fund_Prices_New_file_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Initial_Policy_Fund_Ratio_New_file_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Load_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Payee_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Policy_Beneficiaries_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Policy_Broker_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Policy_Cession_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Policy_Lives_Assured_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Policy_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Prduct_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Product_Fund_Accounts_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Reg28_Asset_Allocations_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Reg28_Policy_Fund_Allocations_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Reg_28_Policy_Allocations_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Reg_28_Quarterly_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Standing_Instruction_Allocations_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Standing_Instruction_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Tax_Free_Savings_Contributions_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Transaction_Fee_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Transaction_Subtypes_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Transactions_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Unit_Holder_Bank_Details_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Unit_Holder_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		},
+		"Unit_Holder_Related_Party_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev"
+		}
+	}
+}
