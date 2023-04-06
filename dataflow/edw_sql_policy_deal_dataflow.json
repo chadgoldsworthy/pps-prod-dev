@@ -1,0 +1,260 @@
+{
+	"name": "edw_sql_policy_deal_dataflow",
+	"properties": {
+		"description": "** need to add Load lookup",
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "DealSource"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "PolicyEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ProductEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "UnitHolderEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "LoadFactTable"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidData",
+					"description": "Export invalid data"
+				},
+				{
+					"dataset": {
+						"referenceName": "edw_database_stage",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToDealStage"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn"
+				},
+				{
+					"name": "ValidateData"
+				},
+				{
+					"name": "DeriveValidColumn"
+				},
+				{
+					"name": "FilterInvalidData"
+				},
+				{
+					"name": "PolicyLookup"
+				},
+				{
+					"name": "ProductLookup"
+				},
+				{
+					"name": "UnitHolderLookup"
+				},
+				{
+					"name": "LoadLookup"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string,",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          UnitHolderID as string,",
+				"          ProductID as string,",
+				"          PolicyNumber as string,",
+				"          LevelIndicator as string,",
+				"          Status as string,",
+				"          StartDate as date,",
+				"          EndDate as date,",
+				"          LoadID as string,",
+				"          DealPercentage as double,",
+				"          TaxType as string,",
+				"          DealTransactionNumber as string,",
+				"          PolicyDealKey as string,",
+				"          ProductKey as short,",
+				"          PolicyKey as string,",
+				"          LoadKey as short,",
+				"          UnitHolderKey as string,",
+				"          SlabNumber as short",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> DealSource",
+				"source(output(",
+				"          PolicyEntityId as long,",
+				"          StorePolicyNumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS PolicyEntityId, PolicyNumber AS StorePolicyNumber FROM store.entity_all_policy',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> PolicyEntityTable",
+				"source(output(",
+				"          ProductEntityId as long,",
+				"          StoreProductCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS ProductEntityId, ProductCode AS StoreProductCode FROM store.entity_all_product',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> ProductEntityTable",
+				"source(output(",
+				"          UnitHolderEntityId as long,",
+				"          StoreUnitHolderCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS UnitHolderEntityId, UnitHolderCode AS StoreUnitHolderCode FROM store.entity_all_unit_holder',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> UnitHolderEntityTable",
+				"source(output(",
+				"          StoreLoadId as long,",
+				"          StoreLoadCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StoreLoadId, LoadCode as StoreLoadCode FROM store.fact_load',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> LoadFactTable",
+				"DealSource derive(BatchId = $BatchId,",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Policy Deal Static Data\",",
+				"          HashKey = sha2(256, UnitHolderID, ProductID, PolicyNumber, StartDate, EndDate, LoadID, DealTransactionNumber, PolicyDealKey, ProductKey, PolicyKey, LoadKey, UnitHolderKey),",
+				"          LoadIdPlaceholder = 0) ~> DerivedColumn",
+				"LoadLookup assert(expectTrue(!isNull(DealTransactionNumber) && !isNull(UnitHolderEntityId) && !isNull(ProductEntityId) && !isNull(PolicyEntityId) && !isNull(StoreLoadId), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+				"ValidateData derive(IsValid = !isError()) ~> DeriveValidColumn",
+				"DeriveValidColumn filter(IsValid == false()) ~> FilterInvalidData",
+				"DerivedColumn, PolicyEntityTable lookup(PolicyNumber == StorePolicyNumber,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> PolicyLookup",
+				"PolicyLookup, ProductEntityTable lookup(ProductID == StoreProductCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> ProductLookup",
+				"ProductLookup, UnitHolderEntityTable lookup(UnitHolderID == StoreUnitHolderCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> UnitHolderLookup",
+				"UnitHolderLookup, LoadFactTable lookup(LoadID == StoreLoadCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> LoadLookup",
+				"FilterInvalidData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidData",
+				"DeriveValidColumn sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderId as long,",
+				"          ProductId as long,",
+				"          FundId as long,",
+				"          PolicyId as long,",
+				"          LoadId as long,",
+				"          PolicyNumber as string,",
+				"          PolicyTransactionNumber as long,",
+				"          FeeCode as long,",
+				"          FeeDescription as string,",
+				"          FeePercentage as decimal(20,5),",
+				"          FundTransactionNumber as long,",
+				"          Amount as decimal(20,5),",
+				"          ReversalIndicator as string,",
+				"          OldTransactionNumber as string,",
+				"          FactFundFeeTransactionKey as long,",
+				"          ProductKey as long,",
+				"          PolicyKey as long,",
+				"          UnitHolderKey as long,",
+				"          LoadKey as long,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          Provider,",
+				"          DataSource,",
+				"          DealTransactionNumber,",
+				"          UnitHolderId = UnitHolderEntityId,",
+				"          ProductID = ProductEntityId,",
+				"          PolicyId = PolicyEntityId,",
+				"          LoadId = StoreLoadId,",
+				"          PolicyDealKey,",
+				"          ProductKey,",
+				"          PolicyKey,",
+				"          LoadKey,",
+				"          UnitHolderKey,",
+				"          SlabNumber,",
+				"          LevelIndicator,",
+				"          Status,",
+				"          StartDate,",
+				"          EndDate,",
+				"          DealPercentage,",
+				"          TaxType,",
+				"          HashKey,",
+				"          IsValid",
+				"     ),",
+				"     preCommands: [],",
+				"     postCommands: []) ~> LoadToDealStage"
+			]
+		}
+	}
+}

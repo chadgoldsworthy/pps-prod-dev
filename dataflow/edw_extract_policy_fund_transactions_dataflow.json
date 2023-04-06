@@ -1,0 +1,101 @@
+{
+	"name": "edw_extract_policy_fund_transactions_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "FundTransactionsSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedFundTransactionsData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractFundTransactions"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          ProductID as string,",
+				"          FundID as string,",
+				"          TransactionTypeCode as short,",
+				"          TransactionSubTypeCode as string,",
+				"          UnitHolderID as string,",
+				"          PolicyNumber as string,",
+				"          TransactionDate as date,",
+				"          PolicyTransactionNumber as long,",
+				"          FundTransactionNumber as long,",
+				"          GrossAmount as double,",
+				"          NetAmount as double,",
+				"          Units as double,",
+				"          Price as double,",
+				"          PriceDate as date,",
+				"          AllocationDate as date,",
+				"          RealisedProfitLoss as boolean,",
+				"          ReversalIndicator as boolean,",
+				"          TransactionTimeStamp as date,",
+				"          PolicyReferenceNumber as string,",
+				"          DistributionTransactionNumber as long,",
+				"          WAC as double,",
+				"          Remarks as string,",
+				"          FundRatio as short,",
+				"          PolicyTransactionStatus as string,",
+				"          PolicyTransactionAllocationDate as date,",
+				"          RefType as short,",
+				"          PaymentMode as boolean,",
+				"          OldTransactionNumber as string,",
+				"          TopUpInclusive as boolean,",
+				"          UpfrontInterest as string,",
+				"          FactFundTransactionKey as integer,",
+				"          ProductKey as short,",
+				"          PolicyKey as integer,",
+				"          UnitHolderKey as integer,",
+				"          TransactionReferenceNumber as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> FundTransactionsSource",
+				"FundTransactionsSource filter(!isNull(FundID)) ~> ExtractFundTransactions",
+				"ExtractFundTransactions sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedFundTransactionsData"
+			]
+		}
+	}
+}

@@ -1,0 +1,125 @@
+{
+	"name": "edw_sql_policy_default_annuity_source_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "PolicyDefaultAnnuitySourceSource",
+					"description": "Import data from sql_broker_source"
+				},
+				{
+					"dataset": {
+						"referenceName": "edw_database_reference",
+						"type": "DatasetReference"
+					},
+					"name": "PolicyDefaultAnnuitySourceReferenceTable"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_database_reference",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToPolicyDefaultAnnuitySource",
+					"description": "Export to entity broker stage table",
+					"rejectedDataLinkedService": {
+						"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					}
+				},
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AlterRow"
+				},
+				{
+					"name": "LookupPolicyDefaultAnnuitySource"
+				},
+				{
+					"name": "split1"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          PolicyNumber as string,",
+				"          ProductCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> PolicyDefaultAnnuitySourceSource",
+				"source(output(",
+				"          ReferencePolicyNumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT PolicyNumber\\nAS ReferencePolicyNumber\\nFROM reference.policy_default_annuity_source',",
+				"     format: 'query') ~> PolicyDefaultAnnuitySourceReferenceTable",
+				"LookupPolicyDefaultAnnuitySource alterRow(insertIf(isNull(ReferencePolicyNumber)),",
+				"     updateIf(!isNull(ReferencePolicyNumber))) ~> AlterRow",
+				"split1@Valid, PolicyDefaultAnnuitySourceReferenceTable lookup(PolicyNumber == ReferencePolicyNumber,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> LookupPolicyDefaultAnnuitySource",
+				"PolicyDefaultAnnuitySourceSource split(!isNull(PolicyNumber) && !isNull(ProductCode),",
+				"     disjoint: false) ~> split1@(Valid, Invalid)",
+				"AlterRow sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          TransactionSubTypeCode as string,",
+				"          TransactionSubTypeName as string,",
+				"          TransactionTypeCode as string,",
+				"          TransactionTypeName as string,",
+				"          RefType as string,",
+				"          TransactionTypeKey as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['PolicyNumber'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          PolicyNumber,",
+				"          ProductCode",
+				"     )) ~> LoadToPolicyDefaultAnnuitySource",
+				"split1@Invalid sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidData"
+			]
+		}
+	}
+}

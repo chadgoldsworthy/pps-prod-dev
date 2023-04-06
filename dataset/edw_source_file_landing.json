@@ -1,0 +1,81 @@
+{
+	"name": "edw_source_file_landing",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"LandingFileName": {
+				"type": "string",
+				"defaultValue": "Distribution20220922233723.txt"
+			},
+			"LandingFileDirectory": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().LandingFileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@concat('landing/', dataset().LandingFileDirectory)",
+					"type": "Expression"
+				},
+				"fileSystem": "sql"
+			},
+			"columnDelimiter": "|",
+			"escapeChar": "\"",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "FundID",
+				"type": "String"
+			},
+			{
+				"name": "DistributionComponentCode",
+				"type": "String"
+			},
+			{
+				"name": "DistributionComponentName",
+				"type": "String"
+			},
+			{
+				"name": "DistributionNumber",
+				"type": "String"
+			},
+			{
+				"name": "DistributionDate",
+				"type": "String"
+			},
+			{
+				"name": "DistributionComponentCPU",
+				"type": "String"
+			},
+			{
+				"name": "FreezeHoldingDate",
+				"type": "String"
+			},
+			{
+				"name": "FactFundDistributionKey",
+				"type": "String"
+			},
+			{
+				"name": "FundKey",
+				"type": "String"
+			},
+			{
+				"name": "DistributionComponentKey",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

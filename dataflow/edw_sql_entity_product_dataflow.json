@@ -1,0 +1,155 @@
+{
+	"name": "edw_sql_entity_product_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ProductSource",
+					"description": "Import data from sql_product_source"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_database_stage",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToEntityProductStage",
+					"description": "Export to entity Product stage table",
+					"rejectedDataLinkedService": {
+						"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					}
+				},
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidRecord",
+					"description": "Export invalid record"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn",
+					"description": "Add derived columns"
+				},
+				{
+					"name": "ValidateData",
+					"description": "Validate data"
+				},
+				{
+					"name": "DeriveValidAndMessageColumns",
+					"description": "Derive valid and message columns"
+				},
+				{
+					"name": "FilterInvalidData"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string (\"58aeacaf-724d-4e44-b200-398edc31ec0d\"),",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          ProductID as string,",
+				"          ProductName as string,",
+				"          ProductShortName as string,",
+				"          ProductStatus as string,",
+				"          ProductType as string,",
+				"          LegalEntityNumber as string,",
+				"          ClientID as short,",
+				"          BankCode as string,",
+				"          BankName as string,",
+				"          BankBranchCode as integer,",
+				"          BankBranchName as string,",
+				"          BankAccountType as string,",
+				"          BankAccountNumber as long,",
+				"          ProductKey as short,",
+				"          FlexEntityKey as short",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> ProductSource",
+				"ProductSource derive(BatchId = $BatchId,",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"PPS Broker Static Data\",",
+				"          CreatedDate = currentDate(\"yyyy-MM-dd\"),",
+				"          ProductCode = ProductID) ~> DerivedColumn",
+				"DerivedColumn assert(expectTrue(!isNull(ProductCode), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+				"ValidateData derive(IsValid = !isError()) ~> DeriveValidAndMessageColumns",
+				"DeriveValidAndMessageColumns filter(IsValid == false()) ~> FilterInvalidData",
+				"DeriveValidAndMessageColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderId as long,",
+				"          ProductId as long,",
+				"          FundId as long,",
+				"          PolicyId as long,",
+				"          LoadId as long,",
+				"          PolicyNumber as string,",
+				"          PolicyTransactionNumber as long,",
+				"          FeeCode as long,",
+				"          FeeDescription as string,",
+				"          FeePercentage as decimal(20,5),",
+				"          FundTransactionNumber as long,",
+				"          Amount as decimal(20,5),",
+				"          ReversalIndicator as string,",
+				"          OldTransactionNumber as string,",
+				"          FactFundFeeTransactionKey as long,",
+				"          ProductKey as long,",
+				"          PolicyKey as long,",
+				"          UnitHolderKey as long,",
+				"          LoadKey as long,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     ignoreAssertFailedRows: true,",
+				"     mapColumn(",
+				"          BatchId,",
+				"          Provider,",
+				"          DataSource,",
+				"          ProductCode,",
+				"          ProductName,",
+				"          ProductShortName,",
+				"          CreatedDate,",
+				"          IsValid",
+				"     )) ~> LoadToEntityProductStage",
+				"FilterInvalidData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidRecord"
+			]
+		}
+	}
+}

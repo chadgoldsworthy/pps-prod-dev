@@ -1,0 +1,92 @@
+{
+	"name": "edw_extract_entity_brokerage_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "BrokerageSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedBrokerageData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractBrokerage"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          BrokerageCode as string,",
+				"          BrokerageName as string,",
+				"          CorrAddressLine1 as string,",
+				"          CorrAddressLine2 as string,",
+				"          CorrAddressLine3 as string,",
+				"          CorrAddressLine4 as short,",
+				"          EmailAddress as string,",
+				"          VatRegistrationNumber as long,",
+				"          BrokerageCategory as string,",
+				"          TelephoneNumber1 as string,",
+				"          TelephoneNumber2 as string,",
+				"          CellPhoneNumber as string,",
+				"          FaxNumber as integer,",
+				"          ContactPerson as integer,",
+				"          BrokerageVatRegistered as boolean,",
+				"          BrokerageCommpymtfreq as boolean,",
+				"          BankCode as string,",
+				"          BankName as string,",
+				"          BankBranchCode as string,",
+				"          BankBranchName as string,",
+				"          BankAccountType as integer,",
+				"          BankAccountNumber as string,",
+				"          BankAccountHolderName as string,",
+				"          FSPNumber as long,",
+				"          WorkFlowNumber as string,",
+				"          RuleEffectiveDate as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> BrokerageSource",
+				"BrokerageSource filter(!isNull(BrokerageCode)) ~> ExtractBrokerage",
+				"ExtractBrokerage sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedBrokerageData"
+			]
+		}
+	}
+}

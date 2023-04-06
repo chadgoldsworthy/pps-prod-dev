@@ -1,0 +1,83 @@
+{
+	"name": "edw_extract_policy_deal_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "DealSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedDealData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractDeal"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          UnitHolderID as long,",
+				"          ProductID as string,",
+				"          PolicyNumber as string,",
+				"          LevelIndicator as string,",
+				"          Status as string,",
+				"          StartDate as date,",
+				"          EndDate as date,",
+				"          LoadID as integer,",
+				"          DealPercentage as double,",
+				"          TaxType as string,",
+				"          DealTransactionNumber as string,",
+				"          PolicyDealKey as integer,",
+				"          ProductKey as short,",
+				"          PolicyKey as integer,",
+				"          LoadKey as short,",
+				"          UnitHolderKey as integer,",
+				"          SlabNumber as short",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> DealSource",
+				"DealSource filter(!isNull(DealTransactionNumber)) ~> ExtractDeal",
+				"ExtractDeal sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedDealData"
+			]
+		}
+	}
+}

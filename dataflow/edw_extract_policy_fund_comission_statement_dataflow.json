@@ -1,0 +1,89 @@
+{
+	"name": "edw_extract_policy_fund_comission_statement_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "CommissionStatementSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedCommissionStatementData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractCommissionStatement"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          ClientID as short,",
+				"          BrokerageCode as string,",
+				"          InvoiceNumber as string,",
+				"          InvoiceDate as date,",
+				"          PriceDate as date,",
+				"          ProductID as string,",
+				"          BrokerCode as string,",
+				"          UnitHolderID as long,",
+				"          PolicyNumber as string,",
+				"          TransactionNumber as long,",
+				"          ContributionAmount as string,",
+				"          CommissionType as string,",
+				"          CommissionPercentage as double,",
+				"          CommissionAmount as double,",
+				"          VATAmount as double,",
+				"          CommissionTotal as double,",
+				"          FundID as string,",
+				"          CommissionStatementKey as integer,",
+				"          BrokerKey as integer,",
+				"          BrokerageKey as short,",
+				"          Policykey as integer,",
+				"          ProductKey as short,",
+				"          UnitHolderKey as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> CommissionStatementSource",
+				"CommissionStatementSource filter(!isNull(TransactionNumber)) ~> ExtractCommissionStatement",
+				"ExtractCommissionStatement sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedCommissionStatementData"
+			]
+		}
+	}
+}

@@ -1,0 +1,161 @@
+{
+	"name": "edw_sql_fund_prices_dataflow",
+	"properties": {
+		"description": "** need to add Load lookup",
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "InitialFundPricesSource"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "FundEntityTable"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidData",
+					"description": "Export invalid data"
+				},
+				{
+					"dataset": {
+						"referenceName": "edw_database_stage",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToFundPricesStage"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn"
+				},
+				{
+					"name": "ValidateData"
+				},
+				{
+					"name": "DeriveValidColumn"
+				},
+				{
+					"name": "FilterInvalidData"
+				},
+				{
+					"name": "FundLookup"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string ('453a65f2-a485-4750-8830-5aa1026efad8'),",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          FundID as string,",
+				"          PriceDate as date,",
+				"          NAVPrice as double,",
+				"          FactPriceKey as integer,",
+				"          Fundkey as short",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> InitialFundPricesSource",
+				"source(output(",
+				"          StoreFundId as long,",
+				"          StoreFundCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StoreFundId, FundCode AS StoreFundCode FROM store.entity_all_fund',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> FundEntityTable",
+				"InitialFundPricesSource derive(BatchId = $BatchId,",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Fund Prices Static Data\") ~> DerivedColumn",
+				"FundLookup assert(expectTrue(!isNull(FundID) && !isNull(StoreFundId) && !isNull(PriceDate), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+				"ValidateData derive(IsValid = !isError()) ~> DeriveValidColumn",
+				"DeriveValidColumn filter(IsValid == false()) ~> FilterInvalidData",
+				"DerivedColumn, FundEntityTable lookup(FundID == StoreFundCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> FundLookup",
+				"FilterInvalidData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidData",
+				"DeriveValidColumn sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderId as long,",
+				"          ProductId as long,",
+				"          FundId as long,",
+				"          PolicyId as long,",
+				"          LoadId as long,",
+				"          PolicyNumber as string,",
+				"          PolicyTransactionNumber as long,",
+				"          FeeCode as long,",
+				"          FeeDescription as string,",
+				"          FeePercentage as decimal(20,5),",
+				"          FundTransactionNumber as long,",
+				"          Amount as decimal(20,5),",
+				"          ReversalIndicator as string,",
+				"          OldTransactionNumber as string,",
+				"          FactFundFeeTransactionKey as long,",
+				"          ProductKey as long,",
+				"          PolicyKey as long,",
+				"          UnitHolderKey as long,",
+				"          LoadKey as long,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          Provider,",
+				"          DataSource,",
+				"          FundId = StoreFundId,",
+				"          EffectiveDate = PriceDate,",
+				"          NAVPrice,",
+				"          FactPriceKey,",
+				"          Fundkey,",
+				"          IsValid",
+				"     ),",
+				"     preCommands: [],",
+				"     postCommands: []) ~> LoadToFundPricesStage"
+			]
+		}
+	}
+}

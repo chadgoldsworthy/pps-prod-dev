@@ -1,0 +1,169 @@
+{
+	"name": "edw_sql_entity_broker_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "BrokerSource",
+					"description": "Import data from sql_broker_source"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_database_stage",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToEntityBrokerStage",
+					"description": "Export to entity broker stage table",
+					"rejectedDataLinkedService": {
+						"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					}
+				},
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidRecord",
+					"description": "Export invalid record"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ValidateData",
+					"description": "Validate data"
+				},
+				{
+					"name": "DeriveValidAndMessageColumns",
+					"description": "Derive valid and message columns"
+				},
+				{
+					"name": "FilterInvalidData"
+				},
+				{
+					"name": "DerivedColumn"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string,",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          BrokerCode as string,",
+				"          BrokerageCode as string,",
+				"          BrokerName as string,",
+				"          EmailAddress as string,",
+				"          IDNumber as long,",
+				"          IDType as string,",
+				"          PlaceofIssue as string,",
+				"          BrokerCategory as string,",
+				"          BrokerLevelNumber as integer,",
+				"          TelephoneNumber1 as string,",
+				"          TelephoneNumber2 as string,",
+				"          CellPhoneNumber as string,",
+				"          FaxNumber as string,",
+				"          ContactPerson as string,",
+				"          CorrAddressLine1 as string,",
+				"          CorrAddressLine2 as string,",
+				"          CorrAddressLine3 as string,",
+				"          CorrAddressLine4 as string,",
+				"          FICAIndicator as boolean,",
+				"          BankCode as string,",
+				"          BankName as string,",
+				"          BankBranchCode as string,",
+				"          BankBranchName as string,",
+				"          BankAccountType as string,",
+				"          BankAccountNumber as boolean,",
+				"          BankAccountHolderName as string,",
+				"          WorkFlowNumber as integer,",
+				"          BrokerInUse as boolean,",
+				"          NoFeesApply as boolean,",
+				"          RuleEffectiveDate as date,",
+				"          BrokerKey as string,",
+				"          BrokerageKey as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> BrokerSource",
+				"DerivedColumn assert(expectTrue(!isNull(BrokerCode), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+				"ValidateData derive(IsValid = !isError()) ~> DeriveValidAndMessageColumns",
+				"DeriveValidAndMessageColumns filter(IsValid == false()) ~> FilterInvalidData",
+				"BrokerSource derive(BatchId = $BatchId,",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Broker Static Data\",",
+				"          CreatedDate = currentDate(\"yyyy-MM-dd\")) ~> DerivedColumn",
+				"DeriveValidAndMessageColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderId as long,",
+				"          ProductId as long,",
+				"          FundId as long,",
+				"          PolicyId as long,",
+				"          LoadId as long,",
+				"          PolicyNumber as string,",
+				"          PolicyTransactionNumber as long,",
+				"          FeeCode as long,",
+				"          FeeDescription as string,",
+				"          FeePercentage as decimal(20,5),",
+				"          FundTransactionNumber as long,",
+				"          Amount as decimal(20,5),",
+				"          ReversalIndicator as string,",
+				"          OldTransactionNumber as string,",
+				"          FactFundFeeTransactionKey as long,",
+				"          ProductKey as long,",
+				"          PolicyKey as long,",
+				"          UnitHolderKey as long,",
+				"          LoadKey as long,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     ignoreAssertFailedRows: true,",
+				"     mapColumn(",
+				"          BatchId,",
+				"          Provider,",
+				"          DataSource,",
+				"          BrokerCode,",
+				"          BrokerageCode,",
+				"          BrokerName,",
+				"          IsValid",
+				"     )) ~> LoadToEntityBrokerStage",
+				"FilterInvalidData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidRecord"
+			]
+		}
+	}
+}

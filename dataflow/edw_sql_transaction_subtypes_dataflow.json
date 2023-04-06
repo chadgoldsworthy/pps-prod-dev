@@ -1,0 +1,133 @@
+{
+	"name": "edw_sql_transaction_subtypes_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "TransactionSubtypesSource",
+					"description": "Import data from sql_broker_source"
+				},
+				{
+					"dataset": {
+						"referenceName": "edw_database_reference",
+						"type": "DatasetReference"
+					},
+					"name": "TransactionSubtypesReferenceTable"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_database_reference",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToTransactionSubtypes",
+					"description": "Export to entity broker stage table",
+					"rejectedDataLinkedService": {
+						"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					}
+				},
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AlterRow"
+				},
+				{
+					"name": "LookupTransactionSubtypes"
+				},
+				{
+					"name": "split1"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          TransactionSubTypeCode as string,",
+				"          TransactionSubTypeName as string,",
+				"          TransactionTypeCode as string,",
+				"          TransactionTypeName as string,",
+				"          RefType as string,",
+				"          TransactionTypeKey as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> TransactionSubtypesSource",
+				"source(output(",
+				"          ReferenceTransactionSubTypeCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT TransactionSubTypeCode\\nAS ReferenceTransactionSubTypeCode\\nFROM reference.transaction_subtypes',",
+				"     format: 'query') ~> TransactionSubtypesReferenceTable",
+				"LookupTransactionSubtypes alterRow(insertIf(isNull(ReferenceTransactionSubTypeCode)),",
+				"     updateIf(!isNull(ReferenceTransactionSubTypeCode))) ~> AlterRow",
+				"split1@Valid, TransactionSubtypesReferenceTable lookup(TransactionSubTypeCode == ReferenceTransactionSubTypeCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> LookupTransactionSubtypes",
+				"TransactionSubtypesSource split(!isNull(TransactionSubTypeCode),",
+				"     disjoint: false) ~> split1@(Valid, Invalid)",
+				"AlterRow sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          TransactionSubTypeCode as string,",
+				"          TransactionSubTypeName as string,",
+				"          TransactionTypeCode as string,",
+				"          TransactionTypeName as string,",
+				"          RefType as string,",
+				"          TransactionTypeKey as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['TransactionSubTypeCode'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          TransactionSubTypeCode,",
+				"          TransactionSubTypeName,",
+				"          TransactionTypeCode,",
+				"          TransactionTypeName,",
+				"          RefType,",
+				"          TransactionTypeKey",
+				"     )) ~> LoadToTransactionSubtypes",
+				"split1@Invalid sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidData"
+			]
+		}
+	}
+}

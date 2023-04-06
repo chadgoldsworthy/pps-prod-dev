@@ -1,0 +1,155 @@
+{
+	"name": "edw_sql_entity_authorised_representative_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "AuthorisedRepresentativeSource",
+					"description": "Import data from sql_unit_holder_source"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_database_stage",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToEntityAuthorisedRepresentativeStage",
+					"description": "Export to entity UnitHolder stage table",
+					"rejectedDataLinkedService": {
+						"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					}
+				},
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidRecord",
+					"description": "Export invalid record"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn",
+					"description": "Add derived columns"
+				},
+				{
+					"name": "ValidateData",
+					"description": "Validate data"
+				},
+				{
+					"name": "DeriveValidAndMessageColumns",
+					"description": "Derive valid and message columns"
+				},
+				{
+					"name": "FilterInvalidData"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string (\"60aeacaf-724d-4e44-b200-398edc31ec0d\"),",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          AuthRepID as string,",
+				"          AuthRepName as string,",
+				"          FirstNames as string,",
+				"          MiddleNames as string,",
+				"          LastName as string,",
+				"          Title as string,",
+				"          CorrAddressLine1 as string,",
+				"          CorrAddressLine2 as string,",
+				"          CorrAddressLine3 as string,",
+				"          CorrAddressLine4 as string,",
+				"          CorrPostCode as string,",
+				"          TelephoneHomeNumber as string,",
+				"          TelephoneWorkNumber as string,",
+				"          CellPhoneNumber as string,",
+				"          FATCAStatus as string,",
+				"          ExpiryDate as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> AuthorisedRepresentativeSource",
+				"AuthorisedRepresentativeSource derive(BatchId = $BatchId,",
+				"          Name = toString(null()),",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Authorised Representative Static Data\",",
+				"          Description = toString(null()),",
+				"          CreatedDate = currentDate(\"yyyy-MM-dd\")) ~> DerivedColumn",
+				"DerivedColumn assert(expectTrue(!isNull(AuthRepID), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+				"ValidateData derive(IsValid = !isError()) ~> DeriveValidAndMessageColumns",
+				"DeriveValidAndMessageColumns filter(IsValid == false()) ~> FilterInvalidData",
+				"DeriveValidAndMessageColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderId as long,",
+				"          ProductId as long,",
+				"          FundId as long,",
+				"          PolicyId as long,",
+				"          LoadId as long,",
+				"          PolicyNumber as string,",
+				"          PolicyTransactionNumber as long,",
+				"          FeeCode as long,",
+				"          FeeDescription as string,",
+				"          FeePercentage as decimal(20,5),",
+				"          FundTransactionNumber as long,",
+				"          Amount as decimal(20,5),",
+				"          ReversalIndicator as string,",
+				"          OldTransactionNumber as string,",
+				"          FactFundFeeTransactionKey as long,",
+				"          ProductKey as long,",
+				"          PolicyKey as long,",
+				"          UnitHolderKey as long,",
+				"          LoadKey as long,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     ignoreAssertFailedRows: true,",
+				"     mapColumn(",
+				"          BatchId,",
+				"          Provider,",
+				"          DataSource,",
+				"          AuthRepCode = AuthRepID,",
+				"          AuthRepName,",
+				"          IsValid",
+				"     )) ~> LoadToEntityAuthorisedRepresentativeStage",
+				"FilterInvalidData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidRecord"
+			]
+		}
+	}
+}

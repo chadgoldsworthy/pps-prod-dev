@@ -1,0 +1,140 @@
+{
+	"name": "edw_database_stage",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "pps_edw_dev_db",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"TableName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Id",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "BatchId",
+				"type": "uniqueidentifier"
+			},
+			{
+				"name": "Provider",
+				"type": "varchar"
+			},
+			{
+				"name": "DataSource",
+				"type": "varchar"
+			},
+			{
+				"name": "UnitHolderId",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "ProductId",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "FundId",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "PolicyId",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "LoadId",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "PolicyNumber",
+				"type": "varchar"
+			},
+			{
+				"name": "PolicyTransactionNumber",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "FeeCode",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "FeeDescription",
+				"type": "varchar"
+			},
+			{
+				"name": "FeePercentage",
+				"type": "decimal",
+				"precision": 20,
+				"scale": 5
+			},
+			{
+				"name": "FundTransactionNumber",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "Amount",
+				"type": "decimal",
+				"precision": 20,
+				"scale": 5
+			},
+			{
+				"name": "ReversalIndicator",
+				"type": "varchar"
+			},
+			{
+				"name": "OldTransactionNumber",
+				"type": "varchar"
+			},
+			{
+				"name": "FactFundFeeTransactionKey",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "ProductKey",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "PolicyKey",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "UnitHolderKey",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "LoadKey",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "IsValid",
+				"type": "bit"
+			}
+		],
+		"typeProperties": {
+			"schema": "stage",
+			"table": {
+				"value": "@dataset().TableName",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

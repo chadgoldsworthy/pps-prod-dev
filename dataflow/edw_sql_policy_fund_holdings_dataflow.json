@@ -1,0 +1,251 @@
+{
+	"name": "edw_sql_policy_fund_holdings_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "DailyHoldingsSource"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "FundEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "PolicyEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ProductEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "UnitHolderEntityTable"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidData",
+					"description": "Export invalid data"
+				},
+				{
+					"dataset": {
+						"referenceName": "edw_database_stage",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToDailyHoldingsStage"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn"
+				},
+				{
+					"name": "ValidateData"
+				},
+				{
+					"name": "DeriveValidColumn"
+				},
+				{
+					"name": "FilterInvalidData"
+				},
+				{
+					"name": "FundLookup"
+				},
+				{
+					"name": "PolicyLookup"
+				},
+				{
+					"name": "ProductLookup"
+				},
+				{
+					"name": "UnitHolderLookup"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string,",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          PolicyNumber as string,",
+				"          ProductID as string,",
+				"          FundID as string,",
+				"          UnitHolderID as string,",
+				"          Units as double,",
+				"          NAVPrice as double,",
+				"          WAC as double,",
+				"          BookValue as double,",
+				"          MarketValue as double,",
+				"          PriceDate as date,",
+				"          HoldingsDate as date,",
+				"          PolicyKey as string,",
+				"          ProductKey as string,",
+				"          Fundkey as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> DailyHoldingsSource",
+				"source(output(",
+				"          FundEntityId as long,",
+				"          FundCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS FundEntityId, FundCode FROM store.entity_all_fund',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> FundEntityTable",
+				"source(output(",
+				"          PolicyEntityId as long,",
+				"          PolicyNumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS PolicyEntityId, PolicyNumber FROM store.entity_all_policy',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> PolicyEntityTable",
+				"source(output(",
+				"          ProductEntityId as long,",
+				"          ProductCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS ProductEntityId, ProductCode FROM store.entity_all_product',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> ProductEntityTable",
+				"source(output(",
+				"          UnitHolderEntityId as long,",
+				"          UnitHolderCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS UnitHolderEntityId, UnitHolderCode FROM store.entity_all_unit_holder',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> UnitHolderEntityTable",
+				"DailyHoldingsSource derive(BatchId = $BatchId,",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Policy Fund Holdings Static Data\",",
+				"          EffectiveDate = HoldingsDate) ~> DerivedColumn",
+				"UnitHolderLookup assert(expectTrue(!isNull(DailyHoldingsSource@PolicyNumber), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+				"ValidateData derive(IsValid = !isError()) ~> DeriveValidColumn",
+				"DeriveValidColumn filter(IsValid == false()) ~> FilterInvalidData",
+				"DerivedColumn, FundEntityTable lookup(FundID == FundCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> FundLookup",
+				"FundLookup, PolicyEntityTable lookup(DailyHoldingsSource@PolicyNumber == PolicyEntityTable@PolicyNumber,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> PolicyLookup",
+				"PolicyLookup, ProductEntityTable lookup(ProductID == ProductCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> ProductLookup",
+				"ProductLookup, UnitHolderEntityTable lookup(UnitHolderID == UnitHolderCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> UnitHolderLookup",
+				"FilterInvalidData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidData",
+				"DeriveValidColumn sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderId as long,",
+				"          ProductId as long,",
+				"          FundId as long,",
+				"          PolicyId as long,",
+				"          LoadId as long,",
+				"          PolicyNumber as string,",
+				"          PolicyTransactionNumber as long,",
+				"          FeeCode as long,",
+				"          FeeDescription as string,",
+				"          FeePercentage as decimal(20,5),",
+				"          FundTransactionNumber as long,",
+				"          Amount as decimal(20,5),",
+				"          ReversalIndicator as string,",
+				"          OldTransactionNumber as string,",
+				"          FactFundFeeTransactionKey as long,",
+				"          ProductKey as long,",
+				"          PolicyKey as long,",
+				"          UnitHolderKey as long,",
+				"          LoadKey as long,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          Provider,",
+				"          DataSource,",
+				"          PolicyId = PolicyEntityId,",
+				"          ProductId = ProductEntityId,",
+				"          FundId = FundEntityId,",
+				"          UnitHolderId = UnitHolderEntityId,",
+				"          Units,",
+				"          NAVPrice,",
+				"          WAC,",
+				"          BookValue,",
+				"          MarketValue,",
+				"          PriceDate,",
+				"          EffectiveDate,",
+				"          PolicyKey,",
+				"          ProductKey,",
+				"          FundKey = Fundkey,",
+				"          IsValid",
+				"     ),",
+				"     preCommands: [],",
+				"     postCommands: []) ~> LoadToDailyHoldingsStage"
+			]
+		}
+	}
+}

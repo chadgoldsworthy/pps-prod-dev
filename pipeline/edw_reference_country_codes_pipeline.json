@@ -1,0 +1,169 @@
+{
+	"name": "edw_reference_country_codes_pipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "LoadToReference",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "ExtractSourceData",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "edw_sql_country_codes_dataflow",
+						"type": "DataFlowReference",
+						"parameters": {
+							"FileName": {
+								"value": "'@{pipeline().parameters.SourceFileName}'",
+								"type": "Expression"
+							},
+							"FileDirectory": {
+								"value": "'@{variables('ExtractFileDirectory')}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"CountryCodesSource": {
+								"ExtractFileName": {
+									"value": "@pipeline().parameters.SourceFileName",
+									"type": "Expression"
+								},
+								"ExtractFileDirectory": {
+									"value": "@variables('ExtractFileDirectory')",
+									"type": "Expression"
+								}
+							},
+							"CountryCodesReferenceTable": {
+								"TableName": {
+									"value": "@variables('ReferenceTableName')",
+									"type": "Expression"
+								}
+							},
+							"LoadToCountryCodes": {
+								"TableName": {
+									"value": "@variables('ReferenceTableName')",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					"integrationRuntime": {
+						"referenceName": "KeepAlive-Runtime",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "ExtractSourceData",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "SetFileDirectory",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "edw_extract_country_codes_dataflow",
+						"type": "DataFlowReference",
+						"parameters": {
+							"ExtractFileName": {
+								"value": "'@{pipeline().parameters.SourceFileName}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"CountryCodesSource": {
+								"LandingFileName": {
+									"value": "@pipeline().parameters.SourceFileName",
+									"type": "Expression"
+								},
+								"LandingFileDirectory": {
+									"value": "@variables('LandingFileDirectory')",
+									"type": "Expression"
+								}
+							},
+							"ExportExtractedData": {
+								"ExtractFileName": {
+									"value": "@pipeline().parameters.SourceFileName",
+									"type": "Expression"
+								},
+								"ExtractFileDirectory": {
+									"value": "@variables('ExtractFileDirectory')",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					"integrationRuntime": {
+						"referenceName": "KeepAlive-Runtime",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "SetFileDirectory",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "ExtractFileDirectory",
+					"value": {
+						"value": "@concat(\n    'country codes/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"SourceFileName": {
+				"type": "string",
+				"defaultValue": "CountryCode20220922233723.txt"
+			}
+		},
+		"variables": {
+			"ReferenceTableName": {
+				"type": "String",
+				"defaultValue": "countr_codes"
+			},
+			"LandingFileDirectory": {
+				"type": "String",
+				"defaultValue": "country codes"
+			},
+			"ExtractFileDirectory": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "EDW/Reference"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-04-06T08:26:52Z"
+	},
+	"type": "Microsoft.Synapse/workspaces/pipelines"
+}

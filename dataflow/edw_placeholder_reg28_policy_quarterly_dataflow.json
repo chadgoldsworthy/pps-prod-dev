@@ -1,0 +1,174 @@
+{
+	"name": "edw_placeholder_reg28_policy_quarterly_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "Reg28QuarterlySource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_entity_stage_product",
+						"type": "DatasetReference"
+					},
+					"name": "LoadProductEntity"
+				},
+				{
+					"dataset": {
+						"referenceName": "edw_entity_stage_policy",
+						"type": "DatasetReference"
+					},
+					"name": "LoadPolicyEntity"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DeriveProductPlaceHolder"
+				},
+				{
+					"name": "DerivePolicyPlaceHolder"
+				},
+				{
+					"name": "AssertPolicy"
+				},
+				{
+					"name": "AssertProduct"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string",
+				"}",
+				"source(output(",
+				"          QuarterEndDate as date,",
+				"          SourceDataQuarterEndDate as date,",
+				"          ClientNo as string,",
+				"          TaxNumber as string,",
+				"          IDNumber as string,",
+				"          Language as string,",
+				"          ClientSurname as string,",
+				"          ClientInitials as string,",
+				"          FirstNames as string,",
+				"          Title as string,",
+				"          AddressLine1 as string,",
+				"          AddressLine2 as string,",
+				"          AddressLine3 as string,",
+				"          AddressLine4 as string,",
+				"          PostalCode as string,",
+				"          ClientAccGrpNo as string,",
+				"          AccGrpID as string,",
+				"          MarketValue as double,",
+				"          LocalEquity as double,",
+				"          LocalProperty as double,",
+				"          LocalCash as double,",
+				"          LocalBond as double,",
+				"          ForeignEquity as double,",
+				"          ForeignProperty as double,",
+				"          ForeignCash as double,",
+				"          ForeignBond as double,",
+				"          Equity as double,",
+				"          Property as double,",
+				"          Offshore as double,",
+				"          Equity_Compliant as boolean,",
+				"          Property_Compliant as boolean,",
+				"          Offshore_Compliant as boolean,",
+				"          Policy_Compliant as boolean,",
+				"          GrandfatherStatus as boolean,",
+				"          Reason as string,",
+				"          GrandfatherToNonGrandfather as boolean,",
+				"          QuarterAge as short,",
+				"          TPACODE as short,",
+				"          Processed as boolean,",
+				"          AllFundsReg28Compliant as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> Reg28QuarterlySource",
+				"AssertProduct derive(IsValid = !isError(),",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Reg28 Policy Quarterly Static Data\",",
+				"          BatchId = $BatchId,",
+				"          DateNow = currentDate()) ~> DeriveProductPlaceHolder",
+				"AssertPolicy derive(IsValid = !isError(),",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Reg28 Policy Quarterly Static Data\",",
+				"          BatchId = $BatchId,",
+				"          ClientAccGrpNoCopy = ClientAccGrpNo,",
+				"          DateNow = currentDate()) ~> DerivePolicyPlaceHolder",
+				"Reg28QuarterlySource assert(expectTrue(!isNull(ClientAccGrpNo), false, 'AssertPolicy')) ~> AssertPolicy",
+				"Reg28QuarterlySource assert(expectTrue(!isNull(AccGrpID), false, 'AssertProduct')) ~> AssertProduct",
+				"DeriveProductPlaceHolder sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          ProductCode as string,",
+				"          ProductName as string,",
+				"          ProductShortName as string,",
+				"          CreatedDate as date,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          IsValid,",
+				"          Provider,",
+				"          DataSource,",
+				"          ProductCode = AccGrpID,",
+				"          CreatedDate = DateNow",
+				"     )) ~> LoadProductEntity",
+				"DerivePolicyPlaceHolder sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          PolicyNumber as string,",
+				"          PolicyReferenceNumber as string,",
+				"          UnitHolderId as long,",
+				"          ProductId as long,",
+				"          ClientId as long,",
+				"          CreatedDate as date,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          IsValid,",
+				"          Provider,",
+				"          DataSource,",
+				"          PolicyNumber = ClientAccGrpNo,",
+				"          PolicyReferenceNumber = ClientAccGrpNoCopy,",
+				"          CreatedDate = DateNow",
+				"     )) ~> LoadPolicyEntity"
+			]
+		}
+	}
+}

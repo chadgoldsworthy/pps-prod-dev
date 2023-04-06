@@ -1,0 +1,225 @@
+{
+	"name": "edw_sql_reg28_policy_allocations_dataflow",
+	"properties": {
+		"description": "** need to add Load lookup",
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "Reg28PolicyAllocationsSource"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "PolicyEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ProductEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "UnitHolderEntityTable"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidData",
+					"description": "Export invalid data"
+				},
+				{
+					"dataset": {
+						"referenceName": "edw_database_stage",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToPolicyAllocationsStage"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn"
+				},
+				{
+					"name": "ValidateData"
+				},
+				{
+					"name": "DeriveValidColumn"
+				},
+				{
+					"name": "FilterInvalidData"
+				},
+				{
+					"name": "PolicyLookup"
+				},
+				{
+					"name": "ProductLookup"
+				},
+				{
+					"name": "UnitHolderLookup"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string,",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          SourceDataQuarterEndDate as date,",
+				"          UnitHolderID as string,",
+				"          PolicyNumber as string,",
+				"          ProductID as string,",
+				"          PriceDate as date,",
+				"          PolicyCompliant as boolean,",
+				"          GrandFatherStatus as boolean,",
+				"          Equity as double,",
+				"          Property as double,",
+				"          Offshore as double,",
+				"          AllFundsReg28Compliant as boolean,",
+				"          QuarterAge as short",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> Reg28PolicyAllocationsSource",
+				"source(output(",
+				"          StorePolicyId as long,",
+				"          StorePolicyNumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StorePolicyId, PolicyNumber AS StorePolicyNumber FROM store.entity_all_policy',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> PolicyEntityTable",
+				"source(output(",
+				"          StoreProductId as long,",
+				"          StoreProductCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StoreProductId, ProductCode AS StoreProductCode FROM store.entity_all_product',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> ProductEntityTable",
+				"source(output(",
+				"          StoreUnitHolderId as long,",
+				"          StoreUnitHolderCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StoreUnitHolderId, UnitHolderCode AS StoreUnitHolderCode FROM store.entity_all_unit_holder',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> UnitHolderEntityTable",
+				"Reg28PolicyAllocationsSource derive(BatchId = $BatchId,",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Reg28 Policy Allocations Static Data\",",
+				"          ClientIdPlaceholder = 0) ~> DerivedColumn",
+				"UnitHolderLookup assert(expectTrue(!isNull(PolicyNumber) && !isNull(SourceDataQuarterEndDate), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+				"ValidateData derive(IsValid = !isError()) ~> DeriveValidColumn",
+				"DeriveValidColumn filter(IsValid == false()) ~> FilterInvalidData",
+				"DerivedColumn, PolicyEntityTable lookup(PolicyNumber == StorePolicyNumber,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> PolicyLookup",
+				"PolicyLookup, ProductEntityTable lookup(ProductID == StoreProductCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> ProductLookup",
+				"ProductLookup, UnitHolderEntityTable lookup(UnitHolderID == StoreUnitHolderCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> UnitHolderLookup",
+				"FilterInvalidData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidData",
+				"DeriveValidColumn sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderId as long,",
+				"          ProductId as long,",
+				"          FundId as long,",
+				"          PolicyId as long,",
+				"          LoadId as long,",
+				"          PolicyNumber as string,",
+				"          PolicyTransactionNumber as long,",
+				"          FeeCode as long,",
+				"          FeeDescription as string,",
+				"          FeePercentage as decimal(20,5),",
+				"          FundTransactionNumber as long,",
+				"          Amount as decimal(20,5),",
+				"          ReversalIndicator as string,",
+				"          OldTransactionNumber as string,",
+				"          FactFundFeeTransactionKey as long,",
+				"          ProductKey as long,",
+				"          PolicyKey as long,",
+				"          UnitHolderKey as long,",
+				"          LoadKey as long,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          Provider,",
+				"          DataSource,",
+				"          EffectiveDate = SourceDataQuarterEndDate,",
+				"          UnitHolderId = StoreUnitHolderId,",
+				"          ProductId = StoreProductId,",
+				"          PolicyId = StorePolicyId,",
+				"          PolicyNumber,",
+				"          PriceDate,",
+				"          PolicyCompliant,",
+				"          GrandFatherStatus,",
+				"          Equity,",
+				"          Property,",
+				"          Offshore,",
+				"          AllFundsReg28Compliant,",
+				"          QuarterAge,",
+				"          IsValid",
+				"     ),",
+				"     preCommands: [],",
+				"     postCommands: []) ~> LoadToPolicyAllocationsStage"
+			]
+		}
+	}
+}

@@ -1,0 +1,244 @@
+{
+	"name": "edw_sql_policy_standing_instruction_dataflow",
+	"properties": {
+		"description": "** need to add Load lookup",
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "StandingInstructionAllocationsSource"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "PolicyEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "UnitHolderEntityTable"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidData",
+					"description": "Export invalid data"
+				},
+				{
+					"dataset": {
+						"referenceName": "edw_database_stage",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToStandingInstructionAllocationsStage"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn"
+				},
+				{
+					"name": "ValidateData"
+				},
+				{
+					"name": "DeriveValidColumn"
+				},
+				{
+					"name": "FilterInvalidData"
+				},
+				{
+					"name": "PolicyLookup"
+				},
+				{
+					"name": "UnitHolderLookup"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string,",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          UnitHolderID as string,",
+				"          PolicyNumber as string,",
+				"          SINumber as string,",
+				"          SIType as string,",
+				"          AnnuitySIAllocationType as string,",
+				"          SIStartDate as date,",
+				"          SIEndDate as date,",
+				"          SIValue as double,",
+				"          SIFrequency as string,",
+				"          SIEscalationFrequency as string,",
+				"          SIEscalationMode as string,",
+				"          SIEscalationValue as short,",
+				"          SIStatusCode as string,",
+				"          SIStatusDescription as string,",
+				"          SICalculationMethod as string,",
+				"          SIFeeOverideBroker as double,",
+				"          SIFeeOverideAdmin as string,",
+				"          BankName as string,",
+				"          BankAccountType as string,",
+				"          BankBranchName as string,",
+				"          BankBranchCode as string,",
+				"          BankAccountNumber as string,",
+				"          BankAccountHolderName as string,",
+				"          RuleEffectiveDate as date,",
+				"          PhaseInOccurences as short,",
+				"          ModeCode as string,",
+				"          ModeCodeDescription as string,",
+				"          SIEscalationStartDate as date,",
+				"          SIEscalationEndDate as date,",
+				"          StandingInstructionKey as string,",
+				"          PolicyKey as string,",
+				"          UnitHolderKey as string,",
+				"          SequenceNumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> StandingInstructionAllocationsSource",
+				"source(output(",
+				"          StorePolicyId as long,",
+				"          StorePolicyNumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StorePolicyId, PolicyNumber AS StorePolicyNumber FROM store.entity_all_policy',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> PolicyEntityTable",
+				"source(output(",
+				"          StoreUnitHolderId as long,",
+				"          StoreUnitHolderCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StoreUnitHolderId, UnitHolderCode AS StoreUnitHolderCode FROM store.entity_all_unit_holder',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> UnitHolderEntityTable",
+				"StandingInstructionAllocationsSource derive(BatchId = $BatchId,",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Policy Standing Instruction Static Data\",",
+				"          ClientIdPlaceholder = 0) ~> DerivedColumn",
+				"UnitHolderLookup assert(expectTrue(!isNull(PolicyNumber) && !isNull(RuleEffectiveDate) && !isNull(SequenceNumber), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+				"ValidateData derive(IsValid = !isError()) ~> DeriveValidColumn",
+				"DeriveValidColumn filter(IsValid == false()) ~> FilterInvalidData",
+				"DerivedColumn, PolicyEntityTable lookup(PolicyNumber == StorePolicyNumber,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> PolicyLookup",
+				"PolicyLookup, UnitHolderEntityTable lookup(UnitHolderID == StoreUnitHolderCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> UnitHolderLookup",
+				"FilterInvalidData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidData",
+				"DeriveValidColumn sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderId as long,",
+				"          ProductId as long,",
+				"          FundId as long,",
+				"          PolicyId as long,",
+				"          LoadId as long,",
+				"          PolicyNumber as string,",
+				"          PolicyTransactionNumber as long,",
+				"          FeeCode as long,",
+				"          FeeDescription as string,",
+				"          FeePercentage as decimal(20,5),",
+				"          FundTransactionNumber as long,",
+				"          Amount as decimal(20,5),",
+				"          ReversalIndicator as string,",
+				"          OldTransactionNumber as string,",
+				"          FactFundFeeTransactionKey as long,",
+				"          ProductKey as long,",
+				"          PolicyKey as long,",
+				"          UnitHolderKey as long,",
+				"          LoadKey as long,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          Provider,",
+				"          DataSource,",
+				"          UnitHolderId = StoreUnitHolderId,",
+				"          PolicyId = StorePolicyId,",
+				"          PolicyNumber,",
+				"          UnitHolderCode = UnitHolderID,",
+				"          SINumber,",
+				"          SIType,",
+				"          AnnuitySIAllocationType,",
+				"          SIStartDate,",
+				"          SIEndDate,",
+				"          SIValue,",
+				"          SIFrequency,",
+				"          SIEscalationFrequency,",
+				"          SIEscalationMode,",
+				"          SIEscalationValue,",
+				"          SIStatusCode,",
+				"          SIStatusDescription,",
+				"          SICalculationMethod,",
+				"          SIFeeOverideBroker,",
+				"          SIFeeOverideAdmin,",
+				"          BankName,",
+				"          BankAccountType,",
+				"          BankBranchName,",
+				"          BankBranchCode,",
+				"          BankAccountNumber,",
+				"          BankAccountHolderName,",
+				"          EffectiveDate = RuleEffectiveDate,",
+				"          PhaseInOccurences,",
+				"          ModeCode,",
+				"          ModeCodeDescription,",
+				"          SIEscalationStartDate,",
+				"          SIEscalationEndDate,",
+				"          StandingInstructionKey,",
+				"          PolicyKey,",
+				"          UnitHolderKey,",
+				"          SequenceNumber,",
+				"          IsValid",
+				"     ),",
+				"     preCommands: [],",
+				"     postCommands: []) ~> LoadToStandingInstructionAllocationsStage"
+			]
+		}
+	}
+}

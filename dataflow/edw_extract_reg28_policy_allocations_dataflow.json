@@ -1,0 +1,78 @@
+{
+	"name": "edw_extract_reg28_policy_allocations_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "Reg28PolicyAllocationsSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedReg28PolicyAllocationsData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractReg28PolicyAllocations"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          SourceDataQuarterEndDate as date,",
+				"          UnitHolderID as long,",
+				"          PolicyNumber as string,",
+				"          ProductID as string,",
+				"          PriceDate as date,",
+				"          PolicyCompliant as boolean,",
+				"          GrandFatherStatus as boolean,",
+				"          Equity as double,",
+				"          Property as double,",
+				"          Offshore as double,",
+				"          AllFundsReg28Compliant as boolean,",
+				"          QuarterAge as short",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> Reg28PolicyAllocationsSource",
+				"Reg28PolicyAllocationsSource filter(!isNull(PolicyNumber) && !isNull(SourceDataQuarterEndDate)) ~> ExtractReg28PolicyAllocations",
+				"ExtractReg28PolicyAllocations sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedReg28PolicyAllocationsData"
+			]
+		}
+	}
+}

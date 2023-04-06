@@ -1,0 +1,72 @@
+{
+	"name": "edw_extract_transaction_subtypes_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "TransactionSubtypesSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportTransactionSubtypes"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractTransactionSubtypes"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          TransactionSubTypeCode as string,",
+				"          TransactionSubTypeName as string,",
+				"          TransactionTypeCode as string,",
+				"          TransactionTypeName as string,",
+				"          RefType as string,",
+				"          TransactionTypeKey as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> TransactionSubtypesSource",
+				"TransactionSubtypesSource filter(!isNull(TransactionSubTypeCode)) ~> ExtractTransactionSubtypes",
+				"ExtractTransactionSubtypes sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportTransactionSubtypes"
+			]
+		}
+	}
+}

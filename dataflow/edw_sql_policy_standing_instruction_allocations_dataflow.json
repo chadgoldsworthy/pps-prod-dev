@@ -1,0 +1,282 @@
+{
+	"name": "edw_sql_policy_standing_instruction_allocations_dataflow",
+	"properties": {
+		"description": "** need to add Load lookup",
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "StandingInstructionAllocationsSource"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "PolicyEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "FromFundEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "UnitHolderEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ToFundEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "StandingInstructionFactTable"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidData",
+					"description": "Export invalid data"
+				},
+				{
+					"dataset": {
+						"referenceName": "edw_database_stage",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToStandingInstructionAllocationsStage"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn"
+				},
+				{
+					"name": "ValidateData"
+				},
+				{
+					"name": "DeriveValidColumn"
+				},
+				{
+					"name": "FilterInvalidData"
+				},
+				{
+					"name": "PolicyLookup"
+				},
+				{
+					"name": "FromFundLookup"
+				},
+				{
+					"name": "UnitHolderLookup"
+				},
+				{
+					"name": "ToFundLookup"
+				},
+				{
+					"name": "StandingInstructionLookup"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string,",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          UnitHolderID as string,",
+				"          PolicyNumber as string,",
+				"          RuleEffectiveDate as date,",
+				"          SINumber as string,",
+				"          FromFundCode as string,",
+				"          ToFundCode as string,",
+				"          FromFundRatio as short,",
+				"          ToFundRatio as short,",
+				"          FactPolicyStandingInstructionAllocationKey as string,",
+				"          PolicyKey as string,",
+				"          UnitHolderKey as string,",
+				"          FromFundKey as string,",
+				"          StandingInstructionKey as string,",
+				"          ToFundKey as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> StandingInstructionAllocationsSource",
+				"source(output(",
+				"          StorePolicyId as long,",
+				"          StorePolicyNumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StorePolicyId, PolicyNumber AS StorePolicyNumber FROM store.entity_all_policy',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> PolicyEntityTable",
+				"source(output(",
+				"          FromStoreFundId as long,",
+				"          FromStoreFundCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS FromStoreFundId, FundCode AS FromStoreFundCode FROM store.entity_all_fund',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> FromFundEntityTable",
+				"source(output(",
+				"          StoreUnitHolderId as long,",
+				"          StoreUnitHolderCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StoreUnitHolderId, UnitHolderCode AS StoreUnitHolderCode FROM store.entity_all_unit_holder',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> UnitHolderEntityTable",
+				"source(output(",
+				"          ToStoreFundId as long,",
+				"          ToStoreFundCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS ToStoreFundId, FundCode AS ToStoreFundCode FROM store.entity_all_fund',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> ToFundEntityTable",
+				"source(output(",
+				"          StoreSiId as long,",
+				"          StoreSiSiNumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StoreSiId, SINumber AS StoreSiSiNumber FROM store.fact_policy_standing_instruction',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> StandingInstructionFactTable",
+				"StandingInstructionAllocationsSource derive(BatchId = $BatchId,",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Policy Standing Instruction Allocations Static Data\",",
+				"          HashKey = sha2(256, UnitHolderID, FromFundCode, PolicyNumber, ToFundCode, PolicyKey, UnitHolderKey),",
+				"          ClientIdPlaceholder = 0) ~> DerivedColumn",
+				"StandingInstructionLookup assert(expectTrue(!isNull(PolicyNumber) && !isNull(RuleEffectiveDate), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+				"ValidateData derive(IsValid = !isError()) ~> DeriveValidColumn",
+				"DeriveValidColumn filter(IsValid == false()) ~> FilterInvalidData",
+				"DerivedColumn, PolicyEntityTable lookup(PolicyNumber == StorePolicyNumber,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> PolicyLookup",
+				"PolicyLookup, FromFundEntityTable lookup(FromFundCode == FromStoreFundCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> FromFundLookup",
+				"ToFundLookup, UnitHolderEntityTable lookup(UnitHolderID == StoreUnitHolderCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> UnitHolderLookup",
+				"FromFundLookup, ToFundEntityTable lookup(ToFundCode == ToStoreFundCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> ToFundLookup",
+				"UnitHolderLookup, StandingInstructionFactTable lookup(SINumber == StoreSiSiNumber,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> StandingInstructionLookup",
+				"FilterInvalidData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidData",
+				"DeriveValidColumn sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderId as long,",
+				"          ProductId as long,",
+				"          FundId as long,",
+				"          PolicyId as long,",
+				"          LoadId as long,",
+				"          PolicyNumber as string,",
+				"          PolicyTransactionNumber as long,",
+				"          FeeCode as long,",
+				"          FeeDescription as string,",
+				"          FeePercentage as decimal(20,5),",
+				"          FundTransactionNumber as long,",
+				"          Amount as decimal(20,5),",
+				"          ReversalIndicator as string,",
+				"          OldTransactionNumber as string,",
+				"          FactFundFeeTransactionKey as long,",
+				"          ProductKey as long,",
+				"          PolicyKey as long,",
+				"          UnitHolderKey as long,",
+				"          LoadKey as long,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          Provider,",
+				"          DataSource,",
+				"          UnitHolderId = StoreUnitHolderId,",
+				"          PolicyId = StorePolicyId,",
+				"          FromFundId = FromStoreFundId,",
+				"          ToFundId = ToStoreFundId,",
+				"          SIId = StoreSiId,",
+				"          PolicyNumber,",
+				"          EffectiveDate = RuleEffectiveDate,",
+				"          SINumber,",
+				"          FromFundCode,",
+				"          ToFundCode,",
+				"          FromFundRatio,",
+				"          ToFundRatio,",
+				"          FactPolicyStandingInstructionAllocationKey,",
+				"          PolicyKey,",
+				"          UnitHolderKey,",
+				"          FromFundKey,",
+				"          ToFundKey,",
+				"          StandingInstructionKey,",
+				"          HashKey,",
+				"          IsValid",
+				"     ),",
+				"     preCommands: [],",
+				"     postCommands: []) ~> LoadToStandingInstructionAllocationsStage"
+			]
+		}
+	}
+}

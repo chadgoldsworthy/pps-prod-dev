@@ -1,0 +1,252 @@
+{
+	"name": "edw_sql_policy_cession_dataflow",
+	"properties": {
+		"description": "** need to add Load lookup",
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "PolicyCessionSource"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "PolicyEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "TransactionEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "FromUnitHolderEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ToUnitHolderEntityTable"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidData",
+					"description": "Export invalid data"
+				},
+				{
+					"dataset": {
+						"referenceName": "edw_database_stage",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToPolicyCessionStage"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn"
+				},
+				{
+					"name": "ValidateData"
+				},
+				{
+					"name": "DeriveValidColumn"
+				},
+				{
+					"name": "FilterInvalidData"
+				},
+				{
+					"name": "PolicyLookup"
+				},
+				{
+					"name": "TransactionLookup"
+				},
+				{
+					"name": "FromUnitHolderLookup"
+				},
+				{
+					"name": "ToUnitHolderLookup"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string,",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          CessionType as string,",
+				"          Cessionary as string,",
+				"          CessionDate as string,",
+				"          TransactionNumber as string,",
+				"          PolicyNumber as string,",
+				"          CessionRemarks as string,",
+				"          UnitHolderFromID as string,",
+				"          UnitHolderToID as string,",
+				"          RuleEffectiveDate as string,",
+				"          PolicyKey as integer,",
+				"          FromUnitHolderKey as integer,",
+				"          ToUnitHolderKey as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> PolicyCessionSource",
+				"source(output(",
+				"          StorePolicyId as long,",
+				"          StorePolicyNumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StorePolicyId, PolicyNumber AS StorePolicyNumber FROM store.entity_all_policy',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> PolicyEntityTable",
+				"source(output(",
+				"          StoreTransactionId as long,",
+				"          StoreTransactionNumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StoreTransactionId, FundTransactionNumber AS StoreTransactionNumber FROM store.fact_policy_fund_transactions',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> TransactionEntityTable",
+				"source(output(",
+				"          StoreFromUnitHolderId as long,",
+				"          StoreFromUnitHolderCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StoreFromUnitHolderId, UnitHolderCode AS StoreFromUnitHolderCode FROM store.entity_all_unit_holder',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> FromUnitHolderEntityTable",
+				"source(output(",
+				"          StoreToUnitHolderId as long,",
+				"          StoreToUnitHolderCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StoreToUnitHolderId, UnitHolderCode AS StoreToUnitHolderCode FROM store.entity_all_unit_holder',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> ToUnitHolderEntityTable",
+				"PolicyCessionSource derive(BatchId = $BatchId,",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Policy Cession Static Data\",",
+				"          ClientIdPlaceholder = 0,",
+				"          CessionDate = toDate(CessionDate, 'dd/MM/yyyy'),",
+				"          RuleEffectiveDate = toDate(RuleEffectiveDate, 'dd/MM/yyyy')) ~> DerivedColumn",
+				"ToUnitHolderLookup assert(expectTrue(!isNull(PolicyNumber) && !isNull(CessionDate), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+				"ValidateData derive(IsValid = !isError()) ~> DeriveValidColumn",
+				"DeriveValidColumn filter(IsValid == false()) ~> FilterInvalidData",
+				"DerivedColumn, PolicyEntityTable lookup(PolicyNumber == StorePolicyNumber,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> PolicyLookup",
+				"PolicyLookup, TransactionEntityTable lookup(TransactionNumber == StoreTransactionNumber,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> TransactionLookup",
+				"TransactionLookup, FromUnitHolderEntityTable lookup(UnitHolderFromID == StoreFromUnitHolderCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> FromUnitHolderLookup",
+				"FromUnitHolderLookup, ToUnitHolderEntityTable lookup(UnitHolderToID == StoreToUnitHolderCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> ToUnitHolderLookup",
+				"FilterInvalidData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidData",
+				"DeriveValidColumn sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderId as long,",
+				"          ProductId as long,",
+				"          FundId as long,",
+				"          PolicyId as long,",
+				"          LoadId as long,",
+				"          PolicyNumber as string,",
+				"          PolicyTransactionNumber as long,",
+				"          FeeCode as long,",
+				"          FeeDescription as string,",
+				"          FeePercentage as decimal(20,5),",
+				"          FundTransactionNumber as long,",
+				"          Amount as decimal(20,5),",
+				"          ReversalIndicator as string,",
+				"          OldTransactionNumber as string,",
+				"          FactFundFeeTransactionKey as long,",
+				"          ProductKey as long,",
+				"          PolicyKey as long,",
+				"          UnitHolderKey as long,",
+				"          LoadKey as long,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          Provider,",
+				"          DataSource,",
+				"          PolicyId = StorePolicyId,",
+				"          TransactonId = StoreTransactionId,",
+				"          UnitHolderFromId = StoreFromUnitHolderId,",
+				"          UnitHolderToId = StoreToUnitHolderId,",
+				"          CessionType,",
+				"          Cessionary,",
+				"          CessionDate,",
+				"          TransactionNumber,",
+				"          PolicyNumber,",
+				"          CessionRemarks,",
+				"          EffectiveDate = RuleEffectiveDate,",
+				"          PolicyKey,",
+				"          FromUnitHolderKey,",
+				"          ToUnitHolderKey,",
+				"          IsValid",
+				"     ),",
+				"     preCommands: [],",
+				"     postCommands: []) ~> LoadToPolicyCessionStage"
+			]
+		}
+	}
+}

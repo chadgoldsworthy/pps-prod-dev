@@ -1,0 +1,143 @@
+{
+	"name": "edw_sql_distribution_component_master_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "DistributionComponentMasterSource",
+					"description": "Import data from sql_broker_source"
+				},
+				{
+					"dataset": {
+						"referenceName": "edw_database_reference",
+						"type": "DatasetReference"
+					},
+					"name": "DistributionComponentMasterReferenceTable"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_database_reference",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToDistributionComponentMaster",
+					"description": "Export to entity broker stage table",
+					"rejectedDataLinkedService": {
+						"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					}
+				},
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AlterRow"
+				},
+				{
+					"name": "LookupDistributionComponentMaster"
+				},
+				{
+					"name": "split1"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          FinFieldNo as short,",
+				"          FinComponentDescription as string,",
+				"          DisplayName as string,",
+				"          RollupID as short,",
+				"          StatementHeader as string,",
+				"          SumStatementOrder as short,",
+				"          StatementOrder as short,",
+				"          DistributionComponentKey as short,",
+				"          TaxDescription as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> DistributionComponentMasterSource",
+				"source(output(",
+				"          ReferenceDistributionComponentCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT DistributionComponentCode\\nAS ReferenceDistributionComponentCode\\nFROM reference.distribution_component_master',",
+				"     format: 'query') ~> DistributionComponentMasterReferenceTable",
+				"LookupDistributionComponentMaster alterRow(insertIf(isNull(ReferenceDistributionComponentCode)),",
+				"     updateIf(!isNull(ReferenceDistributionComponentCode))) ~> AlterRow",
+				"split1@Valid, DistributionComponentMasterReferenceTable lookup(DistributionComponentCode == ReferenceDistributionComponentCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> LookupDistributionComponentMaster",
+				"DistributionComponentMasterSource split(!isNull(DistributionComponentCode),",
+				"     disjoint: false) ~> split1@(Valid, Invalid)",
+				"AlterRow sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          TransactionSubTypeCode as string,",
+				"          TransactionSubTypeName as string,",
+				"          TransactionTypeCode as string,",
+				"          TransactionTypeName as string,",
+				"          RefType as string,",
+				"          TransactionTypeKey as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['DistributionComponentCode'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          DistributionComponentCode,",
+				"          DistributionComponentName,",
+				"          FinFieldNo,",
+				"          FinComponentDescription,",
+				"          DisplayName,",
+				"          RollupID,",
+				"          StatementHeader,",
+				"          SumStatementOrder,",
+				"          StatementOrder,",
+				"          DistributionComponentKey,",
+				"          TaxDescription",
+				"     )) ~> LoadToDistributionComponentMaster",
+				"split1@Invalid sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidData"
+			]
+		}
+	}
+}

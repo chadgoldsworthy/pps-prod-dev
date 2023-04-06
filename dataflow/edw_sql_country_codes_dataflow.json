@@ -1,0 +1,127 @@
+{
+	"name": "edw_sql_country_codes_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "CountryCodesSource",
+					"description": "Import data from sql_broker_source"
+				},
+				{
+					"dataset": {
+						"referenceName": "edw_database_reference",
+						"type": "DatasetReference"
+					},
+					"name": "CountryCodesReferenceTable"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_database_reference",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToCountryCodes",
+					"description": "Export to entity broker stage table",
+					"rejectedDataLinkedService": {
+						"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					}
+				},
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AlterRow"
+				},
+				{
+					"name": "LookupCountryCodes"
+				},
+				{
+					"name": "split1"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          ISOCountryCode as string,",
+				"          ISOCountryDescription as string,",
+				"          FLEXCUBECountryCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> CountryCodesSource",
+				"source(output(",
+				"          ReferenceISOCountryCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT ISOCountryCode AS ReferenceISOCountryCode\\nFROM reference.country_codes',",
+				"     format: 'query') ~> CountryCodesReferenceTable",
+				"LookupCountryCodes alterRow(insertIf(isNull(ReferenceISOCountryCode)),",
+				"     updateIf(!isNull(ReferenceISOCountryCode))) ~> AlterRow",
+				"split1@Valid, CountryCodesReferenceTable lookup(ISOCountryCode == ReferenceISOCountryCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> LookupCountryCodes",
+				"CountryCodesSource split(!isNull(ISOCountryCode),",
+				"     disjoint: false) ~> split1@(Valid, Invalid)",
+				"AlterRow sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          TransactionSubTypeCode as string,",
+				"          TransactionSubTypeName as string,",
+				"          TransactionTypeCode as string,",
+				"          TransactionTypeName as string,",
+				"          RefType as string,",
+				"          TransactionTypeKey as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['ISOCountryCode'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          ISOCountryCode,",
+				"          ISOCountryDescription,",
+				"          FLEXCUBECountryCode",
+				"     )) ~> LoadToCountryCodes",
+				"split1@Invalid sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidData"
+			]
+		}
+	}
+}

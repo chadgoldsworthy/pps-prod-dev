@@ -1,0 +1,161 @@
+{
+	"name": "edw_sql_entity_fund_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "FundSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_database_stage",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToEntityFundStage",
+					"description": "Export to entity fund stage table",
+					"rejectedDataLinkedService": {
+						"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					}
+				},
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidRecord",
+					"description": "Export invalid record"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn",
+					"description": "Add derived columns"
+				},
+				{
+					"name": "ValidateData",
+					"description": "Validate data"
+				},
+				{
+					"name": "Message",
+					"description": "Derive valid and message columns"
+				},
+				{
+					"name": "FilterInvalidData"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string (\"56aeacaf-724d-4e44-b200-398edc31ec0d\"),",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          FundID as string,",
+				"          JSECode as string,",
+				"          FundName as string,",
+				"          FundStatus as string,",
+				"          FundCommencementDate as string,",
+				"          FundCategory as string,",
+				"          FundFamilyNumber as string,",
+				"          FundFamilyDescription as string,",
+				"          FundType as string,",
+				"          AssetManagerNumber as string,",
+				"          Reg28Compliant as boolean,",
+				"          ISINCode as string,",
+				"          FundRangeOption as string,",
+				"          BDANumber as string,",
+				"          PriceSource as string,",
+				"          TotalExpenseRatio as string,",
+				"          AssetManagerDescription as string,",
+				"          FundKey as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> FundSource",
+				"FundSource derive(BatchId = $BatchId,",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Fund Static Data\",",
+				"          CreatedDate = currentDate(\"yyyy-MM-dd\"),",
+				"          FundCode = FundID) ~> DerivedColumn",
+				"DerivedColumn assert(expectTrue(!isNull(FundCode), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+				"ValidateData derive(IsValid = !isError(),",
+				"          PPSFundID_TEMP = FundID) ~> Message",
+				"Message filter(IsValid == false()) ~> FilterInvalidData",
+				"Message sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderId as long,",
+				"          ProductId as long,",
+				"          FundId as long,",
+				"          PolicyId as long,",
+				"          LoadId as long,",
+				"          PolicyNumber as string,",
+				"          PolicyTransactionNumber as long,",
+				"          FeeCode as long,",
+				"          FeeDescription as string,",
+				"          FeePercentage as decimal(20,5),",
+				"          FundTransactionNumber as long,",
+				"          Amount as decimal(20,5),",
+				"          ReversalIndicator as string,",
+				"          OldTransactionNumber as string,",
+				"          FactFundFeeTransactionKey as long,",
+				"          ProductKey as long,",
+				"          PolicyKey as long,",
+				"          UnitHolderKey as long,",
+				"          LoadKey as long,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     ignoreAssertFailedRows: true,",
+				"     mapColumn(",
+				"          BatchId,",
+				"          Provider,",
+				"          DataSource,",
+				"          FundCode = FundID,",
+				"          PPSFundId = PPSFundID_TEMP,",
+				"          JSECode,",
+				"          ISINCode,",
+				"          FundName,",
+				"          FundDescription = FundFamilyDescription,",
+				"          CreatedDate,",
+				"          IsValid",
+				"     )) ~> LoadToEntityFundStage",
+				"FilterInvalidData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidRecord"
+			]
+		}
+	}
+}

@@ -1,0 +1,103 @@
+{
+	"name": "edw_extract_entity_policy_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "PolicySource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedPolicyData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractPolicy"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          PolicyNumber as string,",
+				"          UnitHolderID as string,",
+				"          ProductID as string,",
+				"          ClientID as string,",
+				"          PolicyReferenceNumber as string,",
+				"          PolicyStatus as string,",
+				"          PolicyCreationDate as date,",
+				"          PolicyStartDate as date,",
+				"          PolicyMaturityDate as date,",
+				"          AnniversaryDate as date,",
+				"          WorkFlowNumber as string,",
+				"          AnniversaryValue as double,",
+				"          PolicyEndDate as date,",
+				"          RuleEffectiveDate as date,",
+				"          RetirementAge as short,",
+				"          RetirementDate as date,",
+				"          FundRangeOption as string,",
+				"          PersonalisedProductName as string,",
+				"          WrapFundName as string,",
+				"          SourceFundName as string,",
+				"          PreferredFund as string,",
+				"          ParticipatingEmployerID as string,",
+				"          AuthrepID as string,",
+				"          InitialInvestmentAmount as double,",
+				"          PolicyType as string,",
+				"          AnnuityRange as string,",
+				"          LatestRule as boolean,",
+				"          PolicyKey as string,",
+				"          UnitHolderKey as string,",
+				"          ProductKey as string,",
+				"          AuthorisedRepresentativeKey as string,",
+				"          DefaultAnnuity as boolean,",
+				"          DefaultAnnuitySourceList as string,",
+				"          IntermedSerFee as string,",
+				"          OriginalProductCode as string,",
+				"          Annuitisation as string,",
+				"          SourceFundType as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> PolicySource",
+				"PolicySource filter(!isNull(PolicyNumber)) ~> ExtractPolicy",
+				"ExtractPolicy sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedPolicyData"
+			]
+		}
+	}
+}

@@ -1,0 +1,262 @@
+{
+	"name": "edw_sql_policy_beneficiaries_dataflow",
+	"properties": {
+		"description": "** need to add Load lookup",
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "PolicyBeneficiariesSource"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "PolicyEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ProductEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "UnitHolderEntityTable"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidData",
+					"description": "Export invalid data"
+				},
+				{
+					"dataset": {
+						"referenceName": "edw_database_stage",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToPolicyBeneficiariesStage"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn"
+				},
+				{
+					"name": "ValidateData"
+				},
+				{
+					"name": "DeriveValidColumn"
+				},
+				{
+					"name": "FilterInvalidData"
+				},
+				{
+					"name": "PolicyLookup"
+				},
+				{
+					"name": "ProductLookup"
+				},
+				{
+					"name": "UnitHolderLookup"
+				},
+				{
+					"name": "FilterDeleted"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string ('453a65f2-a485-4750-8830-5aa1026efad8'),",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          BeneficiaryID as long,",
+				"          UnitHolderID as string,",
+				"          ClientID as short,",
+				"          ProductID as string,",
+				"          PolicyNumber as string,",
+				"          BeneficiaryFirstName as string,",
+				"          BeneficiaryMiddleName as string,",
+				"          BeneficiaryLastName as string,",
+				"          BeneficiaryType as string,",
+				"          BeneficiaryRel as string,",
+				"          IDNumber as string,",
+				"          BeneficiaryPercentage as short,",
+				"          BeneficiaryAddress as string,",
+				"          CorrAddressline1 as string,",
+				"          CorrAddressline2 as string,",
+				"          CorrAddressline3 as short,",
+				"          CorrAddressline4 as string,",
+				"          DateOfBirth as date,",
+				"          RuleEffectiveDate as date,",
+				"          EmailAddress as string,",
+				"          TelephoneHomeNumber as long,",
+				"          TelephoneWorkNumber as string,",
+				"          CellPhoneNumber as integer,",
+				"          ModifiedStatus as string,",
+				"          PolicyBeneficiaryKey as integer,",
+				"          ProductKey as short,",
+				"          PolicyKey as integer,",
+				"          UnitHolderKey as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> PolicyBeneficiariesSource",
+				"source(output(",
+				"          StorePolicyId as long,",
+				"          StorePolicyNumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StorePolicyId, PolicyNumber AS StorePolicyNumber FROM store.entity_all_policy',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> PolicyEntityTable",
+				"source(output(",
+				"          StoreProductId as long,",
+				"          StoreProductCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StoreProductId, ProductCode AS StoreProductCode FROM store.entity_all_product',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> ProductEntityTable",
+				"source(output(",
+				"          StoreUnitHolderId as long,",
+				"          StoreUnitHolderCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StoreUnitHolderId, UnitHolderCode AS StoreUnitHolderCode FROM store.entity_all_unit_holder',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> UnitHolderEntityTable",
+				"FilterDeleted derive(BatchId = $BatchId,",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Policy Beneficiaries Static Data\") ~> DerivedColumn",
+				"UnitHolderLookup assert(expectTrue(!isNull(PolicyNumber) && !isNull(RuleEffectiveDate), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+				"ValidateData derive(IsValid = !isError(),",
+				"          IsDeletion = 0) ~> DeriveValidColumn",
+				"DeriveValidColumn filter(IsValid == false()) ~> FilterInvalidData",
+				"DerivedColumn, PolicyEntityTable lookup(PolicyNumber == StorePolicyNumber,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> PolicyLookup",
+				"PolicyLookup, ProductEntityTable lookup(ProductID == StoreProductCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> ProductLookup",
+				"ProductLookup, UnitHolderEntityTable lookup(UnitHolderID == StoreUnitHolderCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> UnitHolderLookup",
+				"PolicyBeneficiariesSource filter(ModifiedStatus != 'D') ~> FilterDeleted",
+				"FilterInvalidData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidData",
+				"DeriveValidColumn sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderId as long,",
+				"          ProductId as long,",
+				"          FundId as long,",
+				"          PolicyId as long,",
+				"          LoadId as long,",
+				"          PolicyNumber as string,",
+				"          PolicyTransactionNumber as long,",
+				"          FeeCode as long,",
+				"          FeeDescription as string,",
+				"          FeePercentage as decimal(20,5),",
+				"          FundTransactionNumber as long,",
+				"          Amount as decimal(20,5),",
+				"          ReversalIndicator as string,",
+				"          OldTransactionNumber as string,",
+				"          FactFundFeeTransactionKey as long,",
+				"          ProductKey as long,",
+				"          PolicyKey as long,",
+				"          UnitHolderKey as long,",
+				"          LoadKey as long,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          Provider,",
+				"          DataSource,",
+				"          BeneficiaryID,",
+				"          UnitHolderID = StoreUnitHolderId,",
+				"          ClientID,",
+				"          ProductID = StoreProductId,",
+				"          PolicyId = StorePolicyId,",
+				"          PolicyNumber,",
+				"          EffectiveDate = RuleEffectiveDate,",
+				"          PolicyBeneficiaryKey,",
+				"          ProductKey,",
+				"          PolicyKey,",
+				"          UnitHolderKey,",
+				"          BeneficiaryFirstName,",
+				"          BeneficiaryMiddleName,",
+				"          BeneficiaryLastName,",
+				"          BeneficiaryType,",
+				"          BeneficiaryRel,",
+				"          IDNumber,",
+				"          BeneficiaryPercentage,",
+				"          BeneficiaryAddress,",
+				"          CorrAddressline1,",
+				"          CorrAddressline2,",
+				"          CorrAddressline3,",
+				"          CorrAddressline4,",
+				"          DateOfBirth,",
+				"          EmailAddress,",
+				"          TelephoneHomeNumber,",
+				"          TelephoneWorkNumber,",
+				"          CellPhoneNumber,",
+				"          ModifiedStatus,",
+				"          IsValid,",
+				"          IsDeletion",
+				"     ),",
+				"     preCommands: [],",
+				"     postCommands: []) ~> LoadToPolicyBeneficiariesStage"
+			]
+		}
+	}
+}

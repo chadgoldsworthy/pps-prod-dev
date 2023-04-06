@@ -1,0 +1,17 @@
+{
+	"name": "Transaction_Fee_New_File",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/sql/blobs/landing/fact transaction fee/",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}

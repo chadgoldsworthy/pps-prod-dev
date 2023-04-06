@@ -1,0 +1,76 @@
+{
+	"name": "edw_extract_load_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "LoadSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedLoadData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractLoad"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          LoadID as short,",
+				"          LoadDescription as string,",
+				"          LoadValue as double,",
+				"          SlabNumber as boolean,",
+				"          SlabFromAmount as integer,",
+				"          SlabToAmount as integer,",
+				"          LoadCalcMethod as string,",
+				"          LoadType as string,",
+				"          LoadBasis as string,",
+				"          LoadKey as short",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> LoadSource",
+				"LoadSource filter(!isNull(LoadID) && !isNull(SlabNumber)) ~> ExtractLoad",
+				"ExtractLoad sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedLoadData"
+			]
+		}
+	}
+}

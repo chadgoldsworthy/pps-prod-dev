@@ -1,0 +1,351 @@
+{
+	"name": "edw_sql_policy_fund_commission_statement_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "CommissionStatementSource"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "FundEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "PolicyEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ProductEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "UnitHolderEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "TransactionsTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "BrokerEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "BrokerageEntityTable"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_database_stage",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToFundTransactionsStage"
+				},
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidData",
+					"description": "Export invalid data"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn"
+				},
+				{
+					"name": "ValidateData",
+					"description": "Assert that condition on columns is met\n\n"
+				},
+				{
+					"name": "DeriveValidColumn"
+				},
+				{
+					"name": "FilterInvalidData"
+				},
+				{
+					"name": "FundLookup"
+				},
+				{
+					"name": "PolicyLookup"
+				},
+				{
+					"name": "ProductLookup"
+				},
+				{
+					"name": "UnitHolderLookup"
+				},
+				{
+					"name": "TransactionLookup"
+				},
+				{
+					"name": "BrokerLookup"
+				},
+				{
+					"name": "BrokerageLookup"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string,",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          ClientID as string,",
+				"          BrokerageCode as string,",
+				"          InvoiceNumber as string,",
+				"          InvoiceDate as string,",
+				"          PriceDate as string,",
+				"          ProductID as string,",
+				"          BrokerCode as string,",
+				"          UnitHolderID as string,",
+				"          PolicyNumber as string,",
+				"          TransactionNumber as string,",
+				"          ContributionAmount as string,",
+				"          CommissionType as string,",
+				"          CommissionPercentage as double,",
+				"          CommissionAmount as double,",
+				"          VATAmount as double,",
+				"          CommissionTotal as double,",
+				"          FundID as string,",
+				"          CommissionStatementKey as string,",
+				"          BrokerKey as string,",
+				"          BrokerageKey as string,",
+				"          Policykey as string,",
+				"          ProductKey as string,",
+				"          UnitHolderKey as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> CommissionStatementSource",
+				"source(output(",
+				"          StoreFundId as long,",
+				"          StoreFundCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StoreFundId, FundCode AS StoreFundCode FROM store.entity_all_fund',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> FundEntityTable",
+				"source(output(",
+				"          StorePolicyId as long,",
+				"          StorePolicyNumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StorePolicyId, PolicyNumber AS StorePolicyNumber FROM store.entity_all_policy',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> PolicyEntityTable",
+				"source(output(",
+				"          StoreProductId as long,",
+				"          StoreProductCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StoreProductId, ProductCode  AS StoreProductCode FROM store.entity_all_product',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> ProductEntityTable",
+				"source(output(",
+				"          StoreUnitHolderId as long,",
+				"          StoreUnitHolderCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StoreUnitHolderId, UnitHolderCode AS StoreUnitHolderCode FROM store.entity_all_unit_holder',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> UnitHolderEntityTable",
+				"source(output(",
+				"          StoreTransactionId as long,",
+				"          StoreTransactionTransactionNumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id as StoreTransactionId, FundTransactionNumber as StoreTransactionTransactionNumber FROM store.fact_policy_fund_transactions',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> TransactionsTable",
+				"source(output(",
+				"          StoreBrokerId as long,",
+				"          StoreBrokerBrokerCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StoreBrokerId, BrokerCode as StoreBrokerBrokerCode FROM store.entity_all_broker',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> BrokerEntityTable",
+				"source(output(",
+				"          StoreBrokerageId as long,",
+				"          StoreBrokerageBrokerageCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id as StoreBrokerageId, BrokerageCode as StoreBrokerageBrokerageCode FROM store.entity_all_brokerage',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> BrokerageEntityTable",
+				"CommissionStatementSource derive(BatchId = $BatchId,",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Policy Fund Commision Statement Static Data\",",
+				"          EffectiveDate = currentDate(\"yyyy-MM-dd\")) ~> DerivedColumn",
+				"BrokerageLookup assert(expectTrue(!isNull(StorePolicyId)&& !isNull(StoreFundId) && !isNull(InvoiceDate) && !isNull(StoreProductId)&& !isNull(StoreUnitHolderId)&& !isNull(StoreBrokerId)&& !isNull(StoreBrokerageId), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+				"ValidateData derive(IsValid = !isError(),",
+				"          InvoiceDateCoverted = toDate(InvoiceDate, 'yyyy-MM-dd'),",
+				"          PriceDateConverted = toDate(PriceDate, 'yyyy-MM-dd')) ~> DeriveValidColumn",
+				"DeriveValidColumn filter(IsValid == false()) ~> FilterInvalidData",
+				"DerivedColumn, FundEntityTable lookup(FundID == StoreFundCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> FundLookup",
+				"FundLookup, PolicyEntityTable lookup(PolicyNumber == StorePolicyNumber,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> PolicyLookup",
+				"PolicyLookup, ProductEntityTable lookup(ProductID == StoreProductCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> ProductLookup",
+				"ProductLookup, UnitHolderEntityTable lookup(UnitHolderID == StoreUnitHolderCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> UnitHolderLookup",
+				"UnitHolderLookup, TransactionsTable lookup(TransactionNumber == StoreTransactionTransactionNumber,",
+				"     multiple: true,",
+				"     broadcast: 'auto',",
+				"     pickup: 'any')~> TransactionLookup",
+				"TransactionLookup, BrokerEntityTable lookup(BrokerCode == StoreBrokerBrokerCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> BrokerLookup",
+				"BrokerLookup, BrokerageEntityTable lookup(BrokerageCode == StoreBrokerageBrokerageCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> BrokerageLookup",
+				"DeriveValidColumn sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderId as long,",
+				"          ProductId as long,",
+				"          FundId as long,",
+				"          PolicyId as long,",
+				"          LoadId as long,",
+				"          PolicyNumber as string,",
+				"          PolicyTransactionNumber as long,",
+				"          FeeCode as long,",
+				"          FeeDescription as string,",
+				"          FeePercentage as decimal(20,5),",
+				"          FundTransactionNumber as long,",
+				"          Amount as decimal(20,5),",
+				"          ReversalIndicator as string,",
+				"          OldTransactionNumber as string,",
+				"          FactFundFeeTransactionKey as long,",
+				"          ProductKey as long,",
+				"          PolicyKey as long,",
+				"          UnitHolderKey as long,",
+				"          LoadKey as long,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          Provider,",
+				"          DataSource,",
+				"          ClientId = ClientID,",
+				"          BrokerageId = StoreBrokerageId,",
+				"          BrokerId = StoreBrokerId,",
+				"          ProductId = StoreProductId,",
+				"          UnitHolderId = StoreUnitHolderId,",
+				"          PolicyId = StorePolicyId,",
+				"          FundId = StoreFundId,",
+				"          TransactionId = StoreTransactionId,",
+				"          BrokerageCode,",
+				"          ProductCode = ProductID,",
+				"          BrokerCode,",
+				"          UnitHolderCode = UnitHolderID,",
+				"          FundCode = FundID,",
+				"          PolicyNumber,",
+				"          InvoiceNumber,",
+				"          InvoiceDate = InvoiceDateCoverted,",
+				"          PriceDate = PriceDateConverted,",
+				"          TransactionNumber,",
+				"          ContributionAmount,",
+				"          CommissionType,",
+				"          CommissionPercentage,",
+				"          CommissionAmount,",
+				"          VATAmount,",
+				"          CommissionTotal,",
+				"          CommissionStatementKey,",
+				"          BrokerKey,",
+				"          BrokerageKey,",
+				"          Policykey,",
+				"          ProductKey,",
+				"          UnitHolderKey,",
+				"          IsValid",
+				"     ),",
+				"     preCommands: [],",
+				"     postCommands: []) ~> LoadToFundTransactionsStage",
+				"FilterInvalidData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidData"
+			]
+		}
+	}
+}

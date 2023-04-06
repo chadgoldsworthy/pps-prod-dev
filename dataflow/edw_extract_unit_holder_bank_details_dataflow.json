@@ -1,0 +1,79 @@
+{
+	"name": "edw_extract_unit_holder_bank_details_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "UnitHolderBankDetailsSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedUnitHolderBankDetailsData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractUnitHolderBankDetails"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          UnitHolderID as string,",
+				"          BankCode as string,",
+				"          BankDefaultDetails as boolean,",
+				"          BankName as string,",
+				"          BankBranchCode as string,",
+				"          BankBranchName as string,",
+				"          BankAccountType as string,",
+				"          BankAccountNumber as long,",
+				"          BankAccountHolderName as string,",
+				"          IBANumber as string,",
+				"          ModifiedStatus as string,",
+				"          UnitHolderBankKey as string,",
+				"          UnitHolderKey as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> UnitHolderBankDetailsSource",
+				"UnitHolderBankDetailsSource filter(!isNull(UnitHolderBankKey)) ~> ExtractUnitHolderBankDetails",
+				"ExtractUnitHolderBankDetails sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedUnitHolderBankDetailsData"
+			]
+		}
+	}
+}

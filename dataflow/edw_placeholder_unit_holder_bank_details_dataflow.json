@@ -1,0 +1,100 @@
+{
+	"name": "edw_placeholder_unit_holder_bank_details_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "UnitHolderBankDetailsSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_entity_stage_unit_holder",
+						"type": "DatasetReference"
+					},
+					"name": "LoadUnitHolderEntity"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AggregateToSelectDistinctUnitHolder"
+				},
+				{
+					"name": "DeriveUnitHolderPlaceHolder"
+				},
+				{
+					"name": "AssertUnitHolder"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string",
+				"}",
+				"source(output(",
+				"          UnitHolderID as string,",
+				"          BankCode as string,",
+				"          BankDefaultDetails as boolean,",
+				"          BankName as string,",
+				"          BankBranchCode as string,",
+				"          BankBranchName as string,",
+				"          BankAccountType as string,",
+				"          BankAccountNumber as long,",
+				"          BankAccountHolderName as string,",
+				"          IBANumber as string,",
+				"          ModifiedStatus as string,",
+				"          UnitHolderBankKey as string,",
+				"          UnitHolderKey as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> UnitHolderBankDetailsSource",
+				"UnitHolderBankDetailsSource aggregate(groupBy(UnitHolderID),",
+				"     UnitHolderCount = count(UnitHolderID)) ~> AggregateToSelectDistinctUnitHolder",
+				"AssertUnitHolder derive(IsValid = !isError(),",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Unit Holder Bank Details Static Data\",",
+				"          BatchId = $BatchId,",
+				"          DateNow = currentDate()) ~> DeriveUnitHolderPlaceHolder",
+				"AggregateToSelectDistinctUnitHolder assert(expectTrue(!isNull(UnitHolderID), false, 'AssertUnitHolder')) ~> AssertUnitHolder",
+				"DeriveUnitHolderPlaceHolder sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderCode as string,",
+				"          SAIDNumber as string,",
+				"          UnitHolderName as string,",
+				"          CreatedDate as date,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          IsValid,",
+				"          Provider,",
+				"          DataSource,",
+				"          UnitHolderCode = UnitHolderID,",
+				"          CreatedDate = DateNow",
+				"     )) ~> LoadUnitHolderEntity"
+			]
+		}
+	}
+}

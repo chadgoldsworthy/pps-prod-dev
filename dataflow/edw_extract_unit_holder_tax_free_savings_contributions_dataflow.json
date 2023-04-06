@@ -1,0 +1,74 @@
+{
+	"name": "edw_extract_unit_holder_tax_free_savings_contributions_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "FactTaxFreeSavingsContributionsSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedFactTaxFreeSavingsContributionsData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractFactTaxFreeSavingsContributions"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          UnitHolderID as string,",
+				"          FiscalYearStartDate as date,",
+				"          FiscalYearEndDate as date,",
+				"          AnnualContributionAmount as double,",
+				"          LifetimeContributionAmount as double,",
+				"          AgencyCode as string,",
+				"          BranchCode as string,",
+				"          Timestamp as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> FactTaxFreeSavingsContributionsSource",
+				"FactTaxFreeSavingsContributionsSource filter(!isNull(UnitHolderID) && !isNull(FiscalYearStartDate) && !isNull(FiscalYearEndDate)) ~> ExtractFactTaxFreeSavingsContributions",
+				"ExtractFactTaxFreeSavingsContributions sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedFactTaxFreeSavingsContributionsData"
+			]
+		}
+	}
+}

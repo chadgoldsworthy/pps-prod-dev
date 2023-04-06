@@ -1,0 +1,89 @@
+{
+	"name": "edw_extract_policy_lives_assured_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "PolicyLivesAssuredSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedPolicyLivesAssuredData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractPolicyLivesAssured"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          UnitHolderID as long,",
+				"          ProductID as string,",
+				"          LivesAssuredNumber as long,",
+				"          PolicyNumber as string,",
+				"          ConstituentStatus as string,",
+				"          ConstituentType as string,",
+				"          ConstituentDescription as string,",
+				"          ConstituentRelationship as string,",
+				"          ConstituentID as long,",
+				"          FirstNames as string,",
+				"          MiddleNames as string,",
+				"          LastName as string,",
+				"          DateofBirth as date,",
+				"          CorrAddressLine1 as string,",
+				"          CorrAddressLine2 as string,",
+				"          CorrAddressLine3 as string,",
+				"          CorrAddressLine4 as string,",
+				"          RuleEffectiveDate as date,",
+				"          ClientID as short,",
+				"          ModifiedStatus as string,",
+				"          PolicyLifeAssuredKey as integer,",
+				"          PolicyKey as integer,",
+				"          ProductKey as short",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> PolicyLivesAssuredSource",
+				"PolicyLivesAssuredSource filter(!isNull(LivesAssuredNumber) && !isNull(RuleEffectiveDate)) ~> ExtractPolicyLivesAssured",
+				"ExtractPolicyLivesAssured sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedPolicyLivesAssuredData"
+			]
+		}
+	}
+}

@@ -1,0 +1,106 @@
+{
+	"name": "edw_extract_reg28_policy_quarterly_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "Reg28QuarterlySource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedReg28QuarterlyData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractReg28Quarterly"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          QuarterEndDate as date,",
+				"          SourceDataQuarterEndDate as date,",
+				"          ClientNo as long,",
+				"          TaxNumber as string,",
+				"          IDNumber as string,",
+				"          Language as string,",
+				"          ClientSurname as string,",
+				"          ClientInitials as string,",
+				"          FirstNames as string,",
+				"          Title as string,",
+				"          AddressLine1 as string,",
+				"          AddressLine2 as string,",
+				"          AddressLine3 as string,",
+				"          AddressLine4 as string,",
+				"          PostalCode as string,",
+				"          ClientAccGrpNo as string,",
+				"          AccGrpID as string,",
+				"          MarketValue as double,",
+				"          LocalEquity as double,",
+				"          LocalProperty as double,",
+				"          LocalCash as double,",
+				"          LocalBond as double,",
+				"          ForeignEquity as double,",
+				"          ForeignProperty as double,",
+				"          ForeignCash as double,",
+				"          ForeignBond as double,",
+				"          Equity as double,",
+				"          Property as double,",
+				"          Offshore as double,",
+				"          Equity_Compliant as boolean,",
+				"          Property_Compliant as boolean,",
+				"          Offshore_Compliant as boolean,",
+				"          Policy_Compliant as boolean,",
+				"          GrandfatherStatus as boolean,",
+				"          Reason as string,",
+				"          GrandfatherToNonGrandfather as boolean,",
+				"          QuarterAge as short,",
+				"          TPACODE as short,",
+				"          Processed as boolean,",
+				"          AllFundsReg28Compliant as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> Reg28QuarterlySource",
+				"Reg28QuarterlySource filter(!isNull(ClientAccGrpNo) && !isNull(QuarterEndDate)) ~> ExtractReg28Quarterly",
+				"ExtractReg28Quarterly sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedReg28QuarterlyData"
+			]
+		}
+	}
+}

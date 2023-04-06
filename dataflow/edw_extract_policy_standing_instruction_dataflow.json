@@ -1,0 +1,99 @@
+{
+	"name": "edw_extract_policy_standing_instruction_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "StandingInstructionSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedStandingInstructionData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractStandingInstruction"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          UnitHolderID as string,",
+				"          PolicyNumber as string,",
+				"          SINumber as string,",
+				"          SIType as string,",
+				"          AnnuitySIAllocationType as string,",
+				"          SIStartDate as date,",
+				"          SIEndDate as date,",
+				"          SIValue as double,",
+				"          SIFrequency as string,",
+				"          SIEscalationFrequency as string,",
+				"          SIEscalationMode as string,",
+				"          SIEscalationValue as short,",
+				"          SIStatusCode as string,",
+				"          SIStatusDescription as string,",
+				"          SICalculationMethod as string,",
+				"          SIFeeOverideBroker as double,",
+				"          SIFeeOverideAdmin as string,",
+				"          BankName as string,",
+				"          BankAccountType as string,",
+				"          BankBranchName as string,",
+				"          BankBranchCode as string,",
+				"          BankAccountNumber as string,",
+				"          BankAccountHolderName as string,",
+				"          RuleEffectiveDate as date,",
+				"          PhaseInOccurences as string,",
+				"          ModeCode as string,",
+				"          ModeCodeDescription as string,",
+				"          SIEscalationStartDate as date,",
+				"          SIEscalationEndDate as date,",
+				"          StandingInstructionKey as string,",
+				"          PolicyKey as string,",
+				"          UnitHolderKey as string,",
+				"          SequenceNumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> StandingInstructionSource",
+				"StandingInstructionSource filter(!isNull(PolicyNumber) && !isNull(RuleEffectiveDate) && !isNull(SequenceNumber)) ~> ExtractStandingInstruction",
+				"ExtractStandingInstruction sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedStandingInstructionData"
+			]
+		}
+	}
+}

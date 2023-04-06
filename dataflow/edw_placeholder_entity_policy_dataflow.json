@@ -1,0 +1,165 @@
+{
+	"name": "edw_placeholder_entity_policy_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "PolicySource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_entity_stage_product",
+						"type": "DatasetReference"
+					},
+					"name": "LoadProductEntity"
+				},
+				{
+					"dataset": {
+						"referenceName": "edw_entity_stage_unit_holder",
+						"type": "DatasetReference"
+					},
+					"name": "LoadUnitHolderEntity"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DeriveProductPlaceHolder"
+				},
+				{
+					"name": "DeriveUnitHolderPlaceHolder"
+				},
+				{
+					"name": "AssertUnitHolder"
+				},
+				{
+					"name": "AssertProduct"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string ('56aeacaf-724d-4e44-b200-398edc31ec0d')",
+				"}",
+				"source(output(",
+				"          PolicyNumber as string,",
+				"          UnitHolderID as string,",
+				"          ProductID as string,",
+				"          ClientID as string,",
+				"          PolicyReferenceNumber as string,",
+				"          PolicyStatus as string,",
+				"          PolicyCreationDate as date,",
+				"          PolicyStartDate as date,",
+				"          PolicyMaturityDate as date,",
+				"          AnniversaryDate as date,",
+				"          WorkFlowNumber as string,",
+				"          AnniversaryValue as double,",
+				"          PolicyEndDate as date,",
+				"          RuleEffectiveDate as date,",
+				"          RetirementAge as short,",
+				"          RetirementDate as date,",
+				"          FundRangeOption as string,",
+				"          PersonalisedProductName as string,",
+				"          WrapFundName as string,",
+				"          SourceFundName as string,",
+				"          PreferredFund as string,",
+				"          ParticipatingEmployerID as string,",
+				"          AuthrepID as string,",
+				"          InitialInvestmentAmount as double,",
+				"          PolicyType as string,",
+				"          AnnuityRange as string,",
+				"          LatestRule as boolean,",
+				"          PolicyKey as string,",
+				"          UnitHolderKey as string,",
+				"          ProductKey as string,",
+				"          AuthorisedRepresentativeKey as string,",
+				"          DefaultAnnuity as boolean,",
+				"          DefaultAnnuitySourceList as string,",
+				"          IntermedSerFee as string,",
+				"          OriginalProductCode as string,",
+				"          Annuitisation as string,",
+				"          SourceFundType as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> PolicySource",
+				"AssertProduct derive(IsValid = !isError(),",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Policy Static Data\",",
+				"          BatchId = $BatchId,",
+				"          DateNow = currentDate()) ~> DeriveProductPlaceHolder",
+				"AssertUnitHolder derive(IsValid = !isError(),",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Policy Static Data\",",
+				"          BatchId = $BatchId,",
+				"          column1 = currentDate()) ~> DeriveUnitHolderPlaceHolder",
+				"PolicySource assert(expectTrue(!isNull(UnitHolderID), false, 'AssertUnitHolder')) ~> AssertUnitHolder",
+				"PolicySource assert(expectTrue(!isNull(ProductID), false, 'AssertProduct')) ~> AssertProduct",
+				"DeriveProductPlaceHolder sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          ProductCode as string,",
+				"          ProductName as string,",
+				"          ProductShortName as string,",
+				"          CreatedDate as date,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          IsValid,",
+				"          Provider,",
+				"          DataSource,",
+				"          ProductCode = ProductID",
+				"     )) ~> LoadProductEntity",
+				"DeriveUnitHolderPlaceHolder sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderCode as string,",
+				"          SAIDNumber as string,",
+				"          UnitHolderName as string,",
+				"          CreatedDate as date,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          IsValid,",
+				"          Provider,",
+				"          DataSource,",
+				"          UnitHolderCode = UnitHolderID",
+				"     )) ~> LoadUnitHolderEntity"
+			]
+		}
+	}
+}

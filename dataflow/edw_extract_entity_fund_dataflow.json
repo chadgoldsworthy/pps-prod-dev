@@ -1,0 +1,84 @@
+{
+	"name": "edw_extract_entity_fund_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "FundSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedFundData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractFund"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          FundID as string,",
+				"          JSECode as string,",
+				"          FundName as string,",
+				"          FundStatus as string,",
+				"          FundCommencementDate as date,",
+				"          FundCategory as string,",
+				"          FundFamilyNumber as string,",
+				"          FundFamilyDescription as string,",
+				"          FundType as string,",
+				"          AssetManagerNumber as string,",
+				"          Reg28Compliant as boolean,",
+				"          ISINCode as string,",
+				"          FundRangeOption as string,",
+				"          BDANumber as string,",
+				"          PriceSource as string,",
+				"          TotalExpenseRatio as string,",
+				"          AssetManagerDescription as string,",
+				"          FundKey as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> FundSource",
+				"FundSource filter(!isNull(FundID)) ~> ExtractFund",
+				"ExtractFund sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedFundData"
+			]
+		}
+	}
+}

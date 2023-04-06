@@ -1,0 +1,200 @@
+{
+	"name": "edw_placeholder_initial_policy_fund_ratio_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "InitialPolicyFundRatioSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_entity_stage_fund",
+						"type": "DatasetReference"
+					},
+					"name": "LoadFundEntity"
+				},
+				{
+					"dataset": {
+						"referenceName": "edw_entity_stage_policy",
+						"type": "DatasetReference"
+					},
+					"name": "LoadPolicyEntity"
+				},
+				{
+					"dataset": {
+						"referenceName": "edw_entity_stage_unit_holder",
+						"type": "DatasetReference"
+					},
+					"name": "LoadUnitHolderEntity"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DeriveFundPlaceHolder"
+				},
+				{
+					"name": "DeriveUnitHolderPlaceHolder"
+				},
+				{
+					"name": "DerivePolicyPlaceHolder"
+				},
+				{
+					"name": "AssertFund"
+				},
+				{
+					"name": "AssertUnitHolder"
+				},
+				{
+					"name": "AssertPolicy"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string",
+				"}",
+				"source(output(",
+				"          PolicyNumber as string,",
+				"          UnitHolderID as string,",
+				"          FundID as string,",
+				"          AssetAllocationRatio as double,",
+				"          RuleEffectiveDate as date,",
+				"          Units as double,",
+				"          WAC as double,",
+				"          Amount as double,",
+				"          PolicyTransactionNumber as long,",
+				"          PolicyInitialAllocationKey as integer,",
+				"          PolicyKey as integer,",
+				"          UnitHolderKey as integer,",
+				"          FundKey as short",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> InitialPolicyFundRatioSource",
+				"AssertFund derive(IsValid = !isError(),",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"PPS Initial Policy Fund Ratio Static Data\",",
+				"          BatchId = $BatchId,",
+				"          JSEFundCode = FundID,",
+				"          DateNow = currentDate()) ~> DeriveFundPlaceHolder",
+				"AssertUnitHolder derive(IsValid = !isError(),",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"PPS Initial Policy Fund Ratio Static Data\",",
+				"          BatchId = $BatchId,",
+				"          DateNow = currentDate()) ~> DeriveUnitHolderPlaceHolder",
+				"AssertPolicy derive(IsValid = !isError(),",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Initial Policy Fund Ratio Static Data\",",
+				"          BatchId = $BatchId,",
+				"          PolicyNumberCopy = PolicyNumber,",
+				"          DateNow = currentDate()) ~> DerivePolicyPlaceHolder",
+				"InitialPolicyFundRatioSource assert(expectTrue(!isNull(FundID), false, 'AssertFund')) ~> AssertFund",
+				"InitialPolicyFundRatioSource assert(expectTrue(!isNull(UnitHolderID), false, 'AssertUnitHolder')) ~> AssertUnitHolder",
+				"InitialPolicyFundRatioSource assert(expectTrue(!isNull(PolicyNumber), false, 'AssertPolicy')) ~> AssertPolicy",
+				"DeriveFundPlaceHolder sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          FundCode as string,",
+				"          PPSFundId as string,",
+				"          JSECode as string,",
+				"          ISINCode as string,",
+				"          FundName as string,",
+				"          FundDescription as string,",
+				"          CreatedDate as date,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          IsValid,",
+				"          Provider,",
+				"          DataSource,",
+				"          FundCode = FundID,",
+				"          JSECode = JSEFundCode,",
+				"          CreatedDate = DateNow",
+				"     )) ~> LoadFundEntity",
+				"DerivePolicyPlaceHolder sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          PolicyNumber as string,",
+				"          PolicyReferenceNumber as string,",
+				"          UnitHolderId as long,",
+				"          ProductId as long,",
+				"          ClientId as long,",
+				"          CreatedDate as date,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          IsValid,",
+				"          Provider,",
+				"          DataSource,",
+				"          PolicyNumber,",
+				"          PolicyReferenceNumber = PolicyNumberCopy,",
+				"          CreatedDate = DateNow",
+				"     )) ~> LoadPolicyEntity",
+				"DeriveUnitHolderPlaceHolder sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderCode as string,",
+				"          SAIDNumber as string,",
+				"          UnitHolderName as string,",
+				"          CreatedDate as date,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          IsValid,",
+				"          Provider,",
+				"          DataSource,",
+				"          UnitHolderCode = UnitHolderID,",
+				"          CreatedDate = DateNow",
+				"     )) ~> LoadUnitHolderEntity"
+			]
+		}
+	}
+}

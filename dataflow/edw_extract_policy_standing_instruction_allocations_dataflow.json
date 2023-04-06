@@ -1,0 +1,80 @@
+{
+	"name": "edw_extract_policy_standing_instruction_allocations_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "StandingInstructionAllocationsSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedStandingInstructionAllocationsData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractStandingInstructionAllocations"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          UnitHolderID as long,",
+				"          PolicyNumber as string,",
+				"          RuleEffectiveDate as date,",
+				"          SINumber as string,",
+				"          FromFundCode as string,",
+				"          ToFundCode as string,",
+				"          FromFundRatio as double,",
+				"          ToFundRatio as short,",
+				"          FactPolicyStandingInstructionAllocationKey as integer,",
+				"          PolicyKey as integer,",
+				"          UnitHolderKey as integer,",
+				"          FromFundKey as short,",
+				"          StandingInstructionKey as integer,",
+				"          ToFundKey as short",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> StandingInstructionAllocationsSource",
+				"StandingInstructionAllocationsSource filter(!isNull(PolicyNumber) && !isNull(RuleEffectiveDate)) ~> ExtractStandingInstructionAllocations",
+				"ExtractStandingInstructionAllocations sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedStandingInstructionAllocationsData"
+			]
+		}
+	}
+}

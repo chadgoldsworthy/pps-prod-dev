@@ -1,0 +1,80 @@
+{
+	"name": "edw_extract_policy_fund_holdings_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "DailyHoldingsSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedDailyHoldingsData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractDailyHoldings"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          PolicyNumber as string,",
+				"          ProductID as string,",
+				"          FundID as string,",
+				"          UnitHolderID as long,",
+				"          Units as double,",
+				"          NAVPrice as double,",
+				"          WAC as double,",
+				"          BookValue as double,",
+				"          MarketValue as double,",
+				"          PriceDate as date,",
+				"          HoldingsDate as date,",
+				"          PolicyKey as integer,",
+				"          ProductKey as short,",
+				"          Fundkey as short",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> DailyHoldingsSource",
+				"DailyHoldingsSource filter(!isNull(PolicyNumber)) ~> ExtractDailyHoldings",
+				"ExtractDailyHoldings sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedDailyHoldingsData"
+			]
+		}
+	}
+}

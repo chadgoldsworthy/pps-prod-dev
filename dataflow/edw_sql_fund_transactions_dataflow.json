@@ -1,0 +1,326 @@
+{
+	"name": "edw_sql_fund_transactions_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "FundTransactionsSource"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "FundEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "PolicyEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ProductEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "UnitHolderEntityTable"
+				},
+				{
+					"dataset": {
+						"referenceName": "edw_database_reference",
+						"type": "DatasetReference"
+					},
+					"name": "TransactionSubtypesReferenceTable"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_database_stage",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToFundTransactionsStage"
+				},
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidData",
+					"description": "Export invalid data"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn"
+				},
+				{
+					"name": "ValidateData"
+				},
+				{
+					"name": "DeriveValidColumn"
+				},
+				{
+					"name": "FilterInvalidData"
+				},
+				{
+					"name": "FundLookup"
+				},
+				{
+					"name": "PolicyLookup"
+				},
+				{
+					"name": "ProductLookup"
+				},
+				{
+					"name": "UnitHolderLookup"
+				},
+				{
+					"name": "TransactionSubtypeLookup"
+				},
+				{
+					"name": "FilterDeleted"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string,",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          ProductID as string,",
+				"          FundID as string,",
+				"          TransactionTypeCode as string,",
+				"          TransactionSubTypeCode as string,",
+				"          UnitHolderID as string,",
+				"          PolicyNumber as string,",
+				"          TransactionDate as date,",
+				"          PolicyTransactionNumber as string,",
+				"          FundTransactionNumber as string,",
+				"          GrossAmount as double,",
+				"          NetAmount as double,",
+				"          Units as double,",
+				"          Price as double,",
+				"          PriceDate as date,",
+				"          AllocationDate as date,",
+				"          RealisedProfitLoss as double,",
+				"          ReversalIndicator as boolean,",
+				"          TransactionTimeStamp as date,",
+				"          PolicyReferenceNumber as string,",
+				"          DistributionTransactionNumber as string,",
+				"          WAC as double,",
+				"          Remarks as string,",
+				"          FundRatio as double,",
+				"          PolicyTransactionStatus as string,",
+				"          PolicyTransactionAllocationDate as date,",
+				"          RefType as string,",
+				"          PaymentMode as string,",
+				"          OldTransactionNumber as string,",
+				"          TopUpInclusive as boolean,",
+				"          UpfrontInterest as double,",
+				"          FactFundTransactionKey as string,",
+				"          ProductKey as string,",
+				"          PolicyKey as string,",
+				"          UnitHolderKey as string,",
+				"          TransactionReferenceNumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> FundTransactionsSource",
+				"source(output(",
+				"          FundEntityId as long,",
+				"          FundCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS FundEntityId, FundCode FROM store.entity_all_fund',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> FundEntityTable",
+				"source(output(",
+				"          PolicyEntityId as long,",
+				"          PolicyNumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS PolicyEntityId, PolicyNumber FROM store.entity_all_policy',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> PolicyEntityTable",
+				"source(output(",
+				"          ProductEntityId as long,",
+				"          ProductCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS ProductEntityId, ProductCode FROM store.entity_all_product',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> ProductEntityTable",
+				"source(output(",
+				"          UnitHolderEntityId as long,",
+				"          UnitHolderCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS UnitHolderEntityId, UnitHolderCode FROM store.entity_all_unit_holder',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> UnitHolderEntityTable",
+				"source(output(",
+				"          TransactionSubTypeCode as string,",
+				"          TransactionSubTypeName as string,",
+				"          TransactionTypeCode as string,",
+				"          TransactionTypeName as string,",
+				"          RefType as string,",
+				"          TransactionTypeKey as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> TransactionSubtypesReferenceTable",
+				"FilterDeleted derive(BatchId = $BatchId,",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Policy Fund Transactions Static Data\",",
+				"          EffectiveDate = currentDate(\"yyyy-MM-dd\"),",
+				"          PolicyId = PolicyNumber) ~> DerivedColumn",
+				"TransactionSubtypeLookup assert(expectTrue(!isNull(FundTransactionNumber) && !isNull(FundID) &&!isNull(ProductID) &&!isNull(UnitHolderID), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+				"ValidateData derive(IsValid = !isError(),",
+				"          IsDeletion = 0) ~> DeriveValidColumn",
+				"DeriveValidColumn filter(IsValid == false()) ~> FilterInvalidData",
+				"DerivedColumn, FundEntityTable lookup(FundID == FundCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> FundLookup",
+				"FundLookup, PolicyEntityTable lookup(FundTransactionsSource@PolicyNumber == PolicyEntityTable@PolicyNumber,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> PolicyLookup",
+				"PolicyLookup, ProductEntityTable lookup(ProductID == ProductCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> ProductLookup",
+				"ProductLookup, UnitHolderEntityTable lookup(UnitHolderID == UnitHolderCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> UnitHolderLookup",
+				"UnitHolderLookup, TransactionSubtypesReferenceTable lookup(FundTransactionsSource@TransactionSubTypeCode == TransactionSubtypesReferenceTable@TransactionSubTypeCode,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> TransactionSubtypeLookup",
+				"FundTransactionsSource filter(ReversalIndicator == false()) ~> FilterDeleted",
+				"DeriveValidColumn sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderId as long,",
+				"          ProductId as long,",
+				"          FundId as long,",
+				"          PolicyId as long,",
+				"          LoadId as long,",
+				"          PolicyNumber as string,",
+				"          PolicyTransactionNumber as long,",
+				"          FeeCode as long,",
+				"          FeeDescription as string,",
+				"          FeePercentage as decimal(20,5),",
+				"          FundTransactionNumber as long,",
+				"          Amount as decimal(20,5),",
+				"          ReversalIndicator as string,",
+				"          OldTransactionNumber as string,",
+				"          FactFundFeeTransactionKey as long,",
+				"          ProductKey as long,",
+				"          PolicyKey as long,",
+				"          UnitHolderKey as long,",
+				"          LoadKey as long,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          Provider,",
+				"          DataSource,",
+				"          FundId = FundEntityId,",
+				"          ProductId = ProductEntityId,",
+				"          UnitHolderId = UnitHolderEntityId,",
+				"          PolicyId = PolicyEntityId,",
+				"          TransactionTypeCode,",
+				"          TransactionSubTypeCode,",
+				"          FactFundTransactionKey,",
+				"          FundTransactionNumber,",
+				"          EffectiveDate = TransactionDate,",
+				"          PriceDate,",
+				"          AllocationDate,",
+				"          PolicyTransactionAllocationDate,",
+				"          PolicyNumber,",
+				"          PolicyTransactionNumber,",
+				"          PolicyTransactionStatus,",
+				"          PolicyReferenceNumber,",
+				"          OldTransactionNumber,",
+				"          DistributionTransactionNumber,",
+				"          PaymentMode,",
+				"          TopUpInclusive,",
+				"          GrossAmount,",
+				"          NetAmount,",
+				"          Units,",
+				"          Price,",
+				"          RealisedProfitAndLoss = RealisedProfitLoss,",
+				"          WAC,",
+				"          FundRatio,",
+				"          UpfrontInterest,",
+				"          TransactionReferenceNumber,",
+				"          ProductKey,",
+				"          PolicyKey,",
+				"          UnitHolderKey,",
+				"          RefType,",
+				"          ReversalIndicator,",
+				"          IsValid,",
+				"          Remarks,",
+				"          IsDeletion",
+				"     ),",
+				"     preCommands: [],",
+				"     postCommands: []) ~> LoadToFundTransactionsStage",
+				"FilterInvalidData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidData"
+			]
+		}
+	}
+}

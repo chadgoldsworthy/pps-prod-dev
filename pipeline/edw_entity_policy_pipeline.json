@@ -1,0 +1,713 @@
+{
+	"name": "edw_entity_policy_pipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "LoadToEntity Staging",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "ExecuteStoredProc Product",
+						"dependencyConditions": [
+							"Completed"
+						]
+					},
+					{
+						"activity": "ExecuteStoredProc UnitHolder",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "edw_sql_entity_policy_dataflow",
+						"type": "DataFlowReference",
+						"parameters": {
+							"BatchId": {
+								"value": "'@{variables('BatchId')}'",
+								"type": "Expression"
+							},
+							"FileName": {
+								"value": "'@{pipeline().parameters.SourceFileName}'",
+								"type": "Expression"
+							},
+							"FileDirectory": {
+								"value": "'@{variables('ExtractFileDirectory')}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"PolicySource": {
+								"ExtractFileName": {
+									"value": "@pipeline().parameters.SourceFileName",
+									"type": "Expression"
+								},
+								"ExtractFileDirectory": {
+									"value": "@variables('ExtractFileDirectory')",
+									"type": "Expression"
+								}
+							},
+							"LoadToEntityPolicyStage": {
+								"TableName": {
+									"value": "@variables('EntityTableName')",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceParameters": {
+							"PolicySource": {
+								"schemaLinkedService": {
+									"ExtractFileName": {
+										"value": "@pipeline().parameters.SourceFileName",
+										"type": "Expression"
+									},
+									"ExtractFileDirectory": {
+										"value": "@variables('ExtractFileDirectory')",
+										"type": "Expression"
+									}
+								}
+							},
+							"LoadToEntityPolicyStage": {
+								"schemaLinkedService": {
+									"TableName": {
+										"value": "@variables('EntityTableName')",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					},
+					"integrationRuntime": {
+						"referenceName": "KeepAlive-Runtime",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "ExecuteEntity StoredProc",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "LoadToEntity Staging",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[stage].[load_entity_all_policy]",
+					"storedProcedureParameters": {
+						"BatchId": {
+							"value": {
+								"value": "@variables('BatchId')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"DataSource": {
+							"value": {
+								"value": "@variables('DataSource')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IsAtomic": {
+							"value": {
+								"value": "@variables('IsAtomic')",
+								"type": "Expression"
+							},
+							"type": "Boolean"
+						},
+						"Provider": {
+							"value": {
+								"value": "@variables('Provider')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"FileName": {
+							"value": {
+								"value": "@pipeline().parameters.SourceFileName",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "pps_edw_dev_db",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "LoadToAttributes Staging",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "ExecuteEntity StoredProc",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "edw_sql_policy_attributes_dataflow",
+						"type": "DataFlowReference",
+						"parameters": {
+							"BatchId": {
+								"value": "'@{variables('BatchId')}'",
+								"type": "Expression"
+							},
+							"FileName": {
+								"value": "'@{pipeline().parameters.SourceFileName}'",
+								"type": "Expression"
+							},
+							"FileDirectory": {
+								"value": "'@{variables('ExtractFileDirectory')}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"PolicySource": {
+								"ExtractFileName": {
+									"value": "@pipeline().parameters.SourceFileName",
+									"type": "Expression"
+								},
+								"ExtractFileDirectory": {
+									"value": "@variables('ExtractFileDirectory')",
+									"type": "Expression"
+								}
+							},
+							"LoadToPolicyAttributesStage": {
+								"TableName": {
+									"value": "@variables('AttributesTableName')",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceParameters": {
+							"PolicySource": {
+								"schemaLinkedService": {
+									"ExtractFileName": {
+										"value": "@pipeline().parameters.SourceFileName",
+										"type": "Expression"
+									},
+									"ExtractFileDirectory": {
+										"value": "@variables('ExtractFileDirectory')",
+										"type": "Expression"
+									}
+								}
+							},
+							"LoadToPolicyAttributesStage": {
+								"schemaLinkedService": {
+									"TableName": {
+										"value": "@variables('AttributesTableName')",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					},
+					"integrationRuntime": {
+						"referenceName": "KeepAlive-Runtime",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "ExecuteAttributes StoredProc",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "LoadToAttributes Staging",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[stage].[load_dim_all_policy_attributes]",
+					"storedProcedureParameters": {
+						"BatchId": {
+							"value": {
+								"value": "@variables('BatchId')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"DataSource": {
+							"value": {
+								"value": "@variables('DataSource')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"FileName": {
+							"value": {
+								"value": "@pipeline().parameters.SourceFileName",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IsAtomic": {
+							"value": {
+								"value": "@variables('IsAtomic')",
+								"type": "Expression"
+							},
+							"type": "Boolean"
+						},
+						"Provider": {
+							"value": {
+								"value": "@variables('Provider')",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "pps_edw_dev_db",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ExtractSourceData",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "CreateFileDirectory",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "CreateBatchId",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "edw_extract_entity_policy_dataflow",
+						"type": "DataFlowReference",
+						"parameters": {
+							"ExtractFileName": {
+								"value": "'@{pipeline().parameters.SourceFileName}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"PolicySource": {
+								"LandingFileName": {
+									"value": "@pipeline().parameters.SourceFileName",
+									"type": "Expression"
+								},
+								"LandingFileDirectory": {
+									"value": "@variables('LandingFileDirectory')",
+									"type": "Expression"
+								}
+							},
+							"ExportExtractedPolicyData": {
+								"ExtractFileName": {
+									"value": "@pipeline().parameters.SourceFileName",
+									"type": "Expression"
+								},
+								"ExtractFileDirectory": {
+									"value": "@variables('ExtractFileDirectory')",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceParameters": {
+							"PolicySource": {
+								"schemaLinkedService": {
+									"LandingFileName": {
+										"value": "@pipeline().parameters.SourceFileName",
+										"type": "Expression"
+									},
+									"LandingFileDirectory": {
+										"value": "@variables('LandingFileDirectory')",
+										"type": "Expression"
+									}
+								}
+							},
+							"ExportExtractedPolicyData": {
+								"linkedService": {
+									"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
+								},
+								"schemaLinkedService": {
+									"ExtractFileName": {
+										"value": "@pipeline().parameters.SourceFileName",
+										"type": "Expression"
+									},
+									"ExtractFileDirectory": {
+										"value": "@variables('ExtractFileDirectory')",
+										"type": "Expression"
+									}
+								},
+								"rejectedDataLinkedService": {
+									"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
+								}
+							}
+						}
+					},
+					"integrationRuntime": {
+						"referenceName": "KeepAlive-Runtime",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "CreateFileDirectory",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "ExtractFileDirectory",
+					"value": {
+						"value": "@concat(\n    'policy/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "WriteToDatabricks",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "ExtractSourceData",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Shared/Notebooks/etl/stage/LoadDatalake",
+					"baseParameters": {
+						"batch_id": {
+							"value": "@variables('BatchId')",
+							"type": "Expression"
+						},
+						"file_name": {
+							"value": "@pipeline().parameters.SourceFileName",
+							"type": "Expression"
+						},
+						"is_atomic": {
+							"value": "@variables('IsAtomic')",
+							"type": "Expression"
+						},
+						"table": {
+							"value": "@variables('EntityTableName')",
+							"type": "Expression"
+						},
+						"key_column": "PolicyNumber",
+						"data_source": {
+							"value": "@variables('DataSource')",
+							"type": "Expression"
+						},
+						"provider": {
+							"value": "@variables('Provider')",
+							"type": "Expression"
+						},
+						"file_directory": {
+							"value": "@variables('ExtractFileDirectory')",
+							"type": "Expression"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "AzureDatabricksLinkedService",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "CreatePlaceholders Product_UnitHolder",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "ExtractSourceData",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "edw_placeholder_entity_policy_dataflow",
+						"type": "DataFlowReference",
+						"parameters": {
+							"BatchId": {
+								"value": "'@{variables('BatchId')}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"PolicySource": {
+								"ExtractFileName": {
+									"value": "@pipeline().parameters.SourceFileName",
+									"type": "Expression"
+								},
+								"ExtractFileDirectory": {
+									"value": "@variables('ExtractFileDirectory')",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					"integrationRuntime": {
+						"referenceName": "KeepAlive-Runtime",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "CreateBatchId",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "BatchId",
+					"value": {
+						"value": "@guid()",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "ExecuteStoredProc Product",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "CreatePlaceholders Product_UnitHolder",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[stage].[load_entity_all_product]",
+					"storedProcedureParameters": {
+						"BatchId": {
+							"value": {
+								"value": "@variables('BatchId')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"DataSource": {
+							"value": {
+								"value": "@variables('DataSource')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"FileName": {
+							"value": {
+								"value": "@pipeline().parameters.SourceFileName",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IsAtomic": {
+							"value": {
+								"value": "@variables('IsAtomic')",
+								"type": "Expression"
+							},
+							"type": "Boolean"
+						},
+						"Provider": {
+							"value": {
+								"value": "@variables('Provider')",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "pps_edw_dev_db",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ExecuteStoredProc UnitHolder",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "CreatePlaceholders Product_UnitHolder",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[stage].[load_entity_all_unit_holder]",
+					"storedProcedureParameters": {
+						"BatchId": {
+							"value": {
+								"value": "@variables('BatchId')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"DataSource": {
+							"value": {
+								"value": "@variables('DataSource')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"FileName": {
+							"value": {
+								"value": "@pipeline().parameters.SourceFileName",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IsAtomic": {
+							"value": {
+								"value": "@variables('IsAtomic')",
+								"type": "Expression"
+							},
+							"type": "Boolean"
+						},
+						"Provider": {
+							"value": {
+								"value": "@variables('Provider')",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "pps_edw_dev_db",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"SourceFileName": {
+				"type": "string",
+				"defaultValue": "Policy20220922233723.txt"
+			}
+		},
+		"variables": {
+			"IsAtomic": {
+				"type": "String",
+				"defaultValue": "false"
+			},
+			"DataSource": {
+				"type": "String",
+				"defaultValue": "Policy Static Data"
+			},
+			"Provider": {
+				"type": "String",
+				"defaultValue": "PPS"
+			},
+			"BatchId": {
+				"type": "String"
+			},
+			"LandingFileDirectory": {
+				"type": "String",
+				"defaultValue": "policy"
+			},
+			"ExtractFileDirectory": {
+				"type": "String"
+			},
+			"EntityTableName": {
+				"type": "String",
+				"defaultValue": "entity_all_policy"
+			},
+			"AttributesTableName": {
+				"type": "String",
+				"defaultValue": "dim_all_policy_attributes"
+			}
+		},
+		"folder": {
+			"name": "EDW/Entity-Attributes"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-04-06T08:24:51Z"
+	},
+	"type": "Microsoft.Synapse/workspaces/pipelines"
+}

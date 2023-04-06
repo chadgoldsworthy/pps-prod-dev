@@ -1,0 +1,50 @@
+{
+	"name": "edw_database_reference",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "pps_edw_dev_db",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"TableName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "TransactionSubTypeCode",
+				"type": "varchar"
+			},
+			{
+				"name": "TransactionSubTypeName",
+				"type": "varchar"
+			},
+			{
+				"name": "TransactionTypeCode",
+				"type": "varchar"
+			},
+			{
+				"name": "TransactionTypeName",
+				"type": "varchar"
+			},
+			{
+				"name": "RefType",
+				"type": "varchar"
+			},
+			{
+				"name": "TransactionTypeKey",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "reference",
+			"table": {
+				"value": "@dataset().TableName",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

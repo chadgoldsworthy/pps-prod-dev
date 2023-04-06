@@ -1,0 +1,179 @@
+{
+	"name": "edw_reference_transaction_subtypes_pipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "LoadToReference",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "ExtractSourceData",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "edw_sql_transaction_subtypes_dataflow",
+						"type": "DataFlowReference",
+						"parameters": {
+							"FileName": {
+								"value": "'@{pipeline().parameters.SourceFileName}'",
+								"type": "Expression"
+							},
+							"FileDirectory": {
+								"value": "'@{variables('ExtractFileDirectory')}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"TransactionSubtypesSource": {
+								"ExtractFileName": {
+									"value": "@pipeline().parameters.SourceFileName",
+									"type": "Expression"
+								},
+								"ExtractFileDirectory": {
+									"value": "@variables('ExtractFileDirectory')",
+									"type": "Expression"
+								}
+							},
+							"TransactionSubtypesReferenceTable": {
+								"TableName": {
+									"value": "@variables('ReferenceTableName')",
+									"type": "Expression"
+								}
+							},
+							"LoadToTransactionSubtypes": {
+								"TableName": {
+									"value": "@variables('ReferenceTableName')",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceParameters": {
+							"LoadToTransactionSubtypes": {
+								"schemaLinkedService": {
+									"TableName": {
+										"value": "@variables('ReferenceTableName')",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					},
+					"integrationRuntime": {
+						"referenceName": "KeepAlive-Runtime",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "ExtractSourceData",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "SetFileDirectory",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "edw_extract_transaction_subtypes_dataflow",
+						"type": "DataFlowReference",
+						"parameters": {
+							"ExtractFileName": {
+								"value": "'@{pipeline().parameters.SourceFileName}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"TransactionSubtypesSource": {
+								"LandingFileName": {
+									"value": "@pipeline().parameters.SourceFileName",
+									"type": "Expression"
+								},
+								"LandingFileDirectory": {
+									"value": "@variables('LandingFileDirectory')",
+									"type": "Expression"
+								}
+							},
+							"ExportTransactionSubtypes": {
+								"ExtractFileName": {
+									"value": "@pipeline().parameters.SourceFileName",
+									"type": "Expression"
+								},
+								"ExtractFileDirectory": {
+									"value": "@variables('ExtractFileDirectory')",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					"integrationRuntime": {
+						"referenceName": "KeepAlive-Runtime",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "SetFileDirectory",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "ExtractFileDirectory",
+					"value": {
+						"value": "@concat(\n    'trasaction subtypes/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"SourceFileName": {
+				"type": "string",
+				"defaultValue": "TransactionSubType20220922233723.txt"
+			}
+		},
+		"variables": {
+			"ReferenceTableName": {
+				"type": "String",
+				"defaultValue": "transaction_subtypes"
+			},
+			"LandingFileDirectory": {
+				"type": "String",
+				"defaultValue": "transaction subtypes"
+			},
+			"ExtractFileDirectory": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "EDW/Reference"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-04-06T08:27:01Z"
+	},
+	"type": "Microsoft.Synapse/workspaces/pipelines"
+}

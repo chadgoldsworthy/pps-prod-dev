@@ -1,0 +1,258 @@
+{
+	"name": "edw_sql_policy_attributes_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "PolicySource",
+					"description": "Add fund source data"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "PolicyEntityTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "pps_edw_dev_db",
+						"type": "LinkedServiceReference"
+					},
+					"name": "DefaultAnnuityReferenceTable"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_database_stage",
+						"type": "DatasetReference"
+					},
+					"name": "LoadToPolicyAttributesStage",
+					"rejectedDataLinkedService": {
+						"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
+						"type": "LinkedServiceReference"
+					}
+				},
+				{
+					"linkedService": {
+						"referenceName": "data_lake_dev",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ExportInvalidData",
+					"description": "Export invalid data"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivedColumn",
+					"description": "Add batch id, data source, effective date and valid column"
+				},
+				{
+					"name": "LookupPolicyEntityId"
+				},
+				{
+					"name": "ValidateData",
+					"description": "Validate data"
+				},
+				{
+					"name": "DeriveValidColumns",
+					"description": "Derive valid columns"
+				},
+				{
+					"name": "FilterInvalidData"
+				},
+				{
+					"name": "LookupDefaultAnnuity"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string,",
+				"     FileName as string,",
+				"     FileDirectory as string",
+				"}",
+				"source(output(",
+				"          PolicyNumber as string,",
+				"          UnitHolderID as string,",
+				"          ProductID as string,",
+				"          ClientID as string,",
+				"          PolicyReferenceNumber as string,",
+				"          PolicyStatus as string,",
+				"          PolicyCreationDate as date,",
+				"          PolicyStartDate as date,",
+				"          PolicyMaturityDate as date,",
+				"          AnniversaryDate as date,",
+				"          WorkFlowNumber as string,",
+				"          AnniversaryValue as double,",
+				"          PolicyEndDate as date,",
+				"          RuleEffectiveDate as date,",
+				"          RetirementAge as short,",
+				"          RetirementDate as date,",
+				"          FundRangeOption as string,",
+				"          PersonalisedProductName as string,",
+				"          WrapFundName as string,",
+				"          SourceFundName as string,",
+				"          PreferredFund as string,",
+				"          ParticipatingEmployerID as string,",
+				"          AuthrepID as string,",
+				"          InitialInvestmentAmount as double,",
+				"          PolicyType as string,",
+				"          AnnuityRange as string,",
+				"          LatestRule as boolean,",
+				"          PolicyKey as string,",
+				"          UnitHolderKey as string,",
+				"          ProductKey as string,",
+				"          AuthorisedRepresentativeKey as string,",
+				"          DefaultAnnuity as boolean,",
+				"          DefaultAnnuitySourceList as string,",
+				"          IntermedSerFee as string,",
+				"          OriginalProductCode as string,",
+				"          Annuitisation as string,",
+				"          SourceFundType as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> PolicySource",
+				"source(output(",
+				"          StorePolicyId as long,",
+				"          StorePolicyPolicyNumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT Id AS StorePolicyId, PolicyNumber AS StorePolicyPolicyNumber FROM store.entity_all_policy',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> PolicyEntityTable",
+				"source(output(",
+				"          DefaultAnnuityPolicyNumber as string,",
+				"          DefaultAnnuityProductCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: 'SELECT PolicyNumber AS DefaultAnnuityPolicyNumber, ProductCode AS DefaultAnnuityProductCode FROM reference.policy_default_annuity_source',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> DefaultAnnuityReferenceTable",
+				"PolicySource derive(BatchId = $BatchId,",
+				"          Provider = \"PPS\",",
+				"          DataSource = \"Policy Static Data\",",
+				"          EffectiveDate = currentDate(\"yyyy-MM-dd\"),",
+				"          HashKey = sha2(256, UnitHolderID, ProductID, ClientID, PolicyReferenceNumber, PolicyStatus, PolicyCreationDate, PolicyStartDate, PolicyMaturityDate, AnniversaryDate, WorkFlowNumber, \r",
+				"AnniversaryValue, PolicyEndDate, RuleEffectiveDate, RetirementAge, RetirementDate, FundRangeOption, PersonalisedProductName, WrapFundName, SourceFundName, PreferredFund, \r",
+				"ParticipatingEmployerID, AuthrepID, InitialInvestmentAmount, PolicyType, AnnuityRange, LatestRule, PolicyKey, UnitHolderKey, ProductKey, AuthorisedRepresentativeKey, \r",
+				"DefaultAnnuity, DefaultAnnuitySourceList, IntermedSerFee, OriginalProductCode, Annuitisation, SourceFundType),",
+				"          PolicyNumber = toString(PolicyNumber)) ~> DerivedColumn",
+				"DerivedColumn, PolicyEntityTable lookup(PolicyNumber == StorePolicyPolicyNumber,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> LookupPolicyEntityId",
+				"LookupDefaultAnnuity assert(expectTrue(!isNull(StorePolicyId), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+				"ValidateData derive(IsValid = !isError()) ~> DeriveValidColumns",
+				"DeriveValidColumns filter(IsValid == false()) ~> FilterInvalidData",
+				"LookupPolicyEntityId, DefaultAnnuityReferenceTable lookup(PolicyNumber == DefaultAnnuityPolicyNumber,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> LookupDefaultAnnuity",
+				"DeriveValidColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          UnitHolderId as long,",
+				"          ProductId as long,",
+				"          FundId as long,",
+				"          PolicyId as long,",
+				"          LoadId as long,",
+				"          PolicyNumber as string,",
+				"          PolicyTransactionNumber as long,",
+				"          FeeCode as long,",
+				"          FeeDescription as string,",
+				"          FeePercentage as decimal(20,5),",
+				"          FundTransactionNumber as long,",
+				"          Amount as decimal(20,5),",
+				"          ReversalIndicator as string,",
+				"          OldTransactionNumber as string,",
+				"          FactFundFeeTransactionKey as long,",
+				"          ProductKey as long,",
+				"          PolicyKey as long,",
+				"          UnitHolderKey as long,",
+				"          LoadKey as long,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 0,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     ignoreAssertFailedRows: true,",
+				"     mapColumn(",
+				"          BatchId,",
+				"          EffectiveDate,",
+				"          Provider,",
+				"          DataSource,",
+				"          PolicyId = StorePolicyId,",
+				"          PolicyReferenceNumber,",
+				"          PolicyStatus,",
+				"          PolicyCreationDate,",
+				"          PolicyStartDate,",
+				"          PolicyMaturityDate,",
+				"          AnniversaryDate,",
+				"          WorkFlowNumber,",
+				"          AnniversaryValue,",
+				"          PolicyEndDate,",
+				"          RuleEffectiveDate,",
+				"          RetirementAge,",
+				"          RetirementDate,",
+				"          FundRangeOption,",
+				"          PersonalisedProductName,",
+				"          WrapFundName,",
+				"          SourceFundName,",
+				"          PreferredFund,",
+				"          ParticipatingEmployerCode = ParticipatingEmployerID,",
+				"          AuthrepID,",
+				"          InitialInvestmentAmount,",
+				"          PolicyType,",
+				"          AnnuityRange,",
+				"          LatestRule,",
+				"          AuthorisedRepresentativeKey,",
+				"          DefaultAnnuity,",
+				"          DefaultAnnuitySourceList = DefaultAnnuityProductCode,",
+				"          IntermedSerFee,",
+				"          OriginalProductCode,",
+				"          Annuitisation,",
+				"          SourceFundType,",
+				"          IsValid,",
+				"          HashKey",
+				"     )) ~> LoadToPolicyAttributesStage",
+				"FilterInvalidData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     container: 'sql',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     partitionFileNames:[($FileName)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportInvalidData"
+			]
+		}
+	}
+}

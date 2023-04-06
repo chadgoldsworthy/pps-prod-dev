@@ -1,0 +1,93 @@
+{
+	"name": "edw_placeholder_fund_distribution_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "DistributionSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_entity_stage_fund",
+						"type": "DatasetReference"
+					},
+					"name": "LoadFundEntity"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DeriveFundPlaceHolder"
+				},
+				{
+					"name": "AssertFund"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     BatchId as string",
+				"}",
+				"source(output(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> DistributionSource",
+				"AssertFund derive(Provider = \"PPS\",",
+				"          DataSource = \"Fund Distribution Static Data\",",
+				"          BatchId = $BatchId,",
+				"          IsValid = !isError()) ~> DeriveFundPlaceHolder",
+				"DistributionSource assert(expectTrue(!isNull(FundID), false, 'AssertFund')) ~> AssertFund",
+				"DeriveFundPlaceHolder sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Id as long,",
+				"          BatchId as string,",
+				"          Provider as string,",
+				"          DataSource as string,",
+				"          FundCode as string,",
+				"          PPSFundId as string,",
+				"          JSECode as string,",
+				"          ISINCode as string,",
+				"          FundName as string,",
+				"          FundDescription as string,",
+				"          CreatedDate as date,",
+				"          IsValid as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          BatchId,",
+				"          Provider,",
+				"          DataSource,",
+				"          FundCode = FundID,",
+				"          IsValid",
+				"     )) ~> LoadFundEntity"
+			]
+		}
+	}
+}

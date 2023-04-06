@@ -1,0 +1,79 @@
+{
+	"name": "edw_extract_initial_policy_fund_ratio_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "InitialPolicyFundRatioSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedInitialPolicyFundRatioData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractInitialPolicyFundRatio"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          PolicyNumber as string,",
+				"          UnitHolderID as long,",
+				"          FundID as string,",
+				"          AssetAllocationRatio as double,",
+				"          RuleEffectiveDate as date,",
+				"          Units as double,",
+				"          WAC as double,",
+				"          Amount as double,",
+				"          PolicyTransactionNumber as long,",
+				"          PolicyInitialAllocationKey as integer,",
+				"          PolicyKey as integer,",
+				"          UnitHolderKey as integer,",
+				"          FundKey as short",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> InitialPolicyFundRatioSource",
+				"InitialPolicyFundRatioSource filter(!isNull(PolicyNumber)) ~> ExtractInitialPolicyFundRatio",
+				"ExtractInitialPolicyFundRatio sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedInitialPolicyFundRatioData"
+			]
+		}
+	}
+}

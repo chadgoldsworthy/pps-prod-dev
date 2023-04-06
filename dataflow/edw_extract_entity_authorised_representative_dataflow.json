@@ -1,0 +1,82 @@
+{
+	"name": "edw_extract_entity_authorised_representative_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "AuthorisedRepresentativeSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedAuthorisedRepresentativeData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractAuthorisedRepresentative"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          AuthRepID as string,",
+				"          AuthRepName as string,",
+				"          FirstNames as string,",
+				"          MiddleNames as string,",
+				"          LastName as string,",
+				"          Title as string,",
+				"          CorrAddressLine1 as string,",
+				"          CorrAddressLine2 as string,",
+				"          CorrAddressLine3 as string,",
+				"          CorrAddressLine4 as string,",
+				"          CorrPostCode as string,",
+				"          TelephoneHomeNumber as string,",
+				"          TelephoneWorkNumber as string,",
+				"          CellPhoneNumber as string,",
+				"          FATCAStatus as string,",
+				"          ExpiryDate as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> AuthorisedRepresentativeSource",
+				"AuthorisedRepresentativeSource filter(!isNull(AuthRepID)) ~> ExtractAuthorisedRepresentative",
+				"ExtractAuthorisedRepresentative sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedAuthorisedRepresentativeData"
+			]
+		}
+	}
+}

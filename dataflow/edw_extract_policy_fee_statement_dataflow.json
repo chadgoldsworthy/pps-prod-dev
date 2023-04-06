@@ -1,0 +1,83 @@
+{
+	"name": "edw_extract_policy_fee_statement_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "FeeStatementSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedFeeStatementData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractFeeStatement"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          ClientID as string,",
+				"          InvoiceNumber as string,",
+				"          InvoiceDate as string,",
+				"          TransactionDate as string,",
+				"          ProductID as string,",
+				"          UnitHolderID as string,",
+				"          PolicyNumber as string,",
+				"          TransactionNumber as string,",
+				"          ContributionAmount as double,",
+				"          FeeType as string,",
+				"          FeePercentage as double,",
+				"          FeeAmount as double,",
+				"          FeeStatementKey as string,",
+				"          ProductKey as string,",
+				"          PolicyKey as string,",
+				"          UnitHolderKey as string,",
+				"          FeeTypekey as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> FeeStatementSource",
+				"FeeStatementSource filter(!isNull(TransactionDate)) ~> ExtractFeeStatement",
+				"ExtractFeeStatement sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedFeeStatementData"
+			]
+		}
+	}
+}

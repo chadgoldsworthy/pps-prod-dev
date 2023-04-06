@@ -1,0 +1,135 @@
+{
+	"name": "edw_extract_entity_unit_holder_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "UnitHolderSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedUnitHolderData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractUnitHolder"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          UnitHolderID as long,",
+				"          UnitHolderCategory as string,",
+				"          UnitHolderStatus as string,",
+				"          FirstNames as string,",
+				"          MiddleNames as string,",
+				"          Surname as string,",
+				"          Initials as string,",
+				"          Title as string,",
+				"          IDNumber as long,",
+				"          IDType as string,",
+				"          PlaceofIssue as string,",
+				"          DateofBirth as date,",
+				"          MaritalStatusCode as string,",
+				"          MaritalStatusDescription as string,",
+				"          Gender as string,",
+				"          TelephoneHomeNumber as integer,",
+				"          TelephoneWorkNumber as integer,",
+				"          CellPhoneNumber as integer,",
+				"          FaxNumber as integer,",
+				"          EmailPrimaryAddress as string,",
+				"          EmailSecondaryAddress as string,",
+				"          CompanyName as string,",
+				"          ContactName as string,",
+				"          CompanyRegistrationNumber as string,",
+				"          Commencementdate as date,",
+				"          CorrAddressLine1 as string,",
+				"          CorrAddressLine2 as string,",
+				"          CorrAddressLine3 as string,",
+				"          CorrAddressLine4 as string,",
+				"          CorrCountry as string,",
+				"          CorrPostCode as short,",
+				"          ResAddressLine1 as string,",
+				"          ResAddressLine2 as string,",
+				"          ResAddressLine3 as string,",
+				"          ResAddressLine4 as string,",
+				"          ResCountry as string,",
+				"          ResPostCode as short,",
+				"          PreferedMailCode as string,",
+				"          PreferedMailDescription as string,",
+				"          TaxNumber as string,",
+				"          WorkFlowNumber as integer,",
+				"          ClientMemberNumber as integer,",
+				"          AddressUnknown as boolean,",
+				"          Language as string,",
+				"          GuardianName as string,",
+				"          TaxIdentificationNo_01 as integer,",
+				"          AuthRepID as string,",
+				"          FicaStatus as string,",
+				"          TaxIndentificationNo_02 as string,",
+				"          CountryofTaxResidence_02 as string,",
+				"          NationalityISO as string,",
+				"          Nationality as string,",
+				"          CountryOfDomicile as string,",
+				"          CountryofTaxResidency_01 as string,",
+				"          IndiciaIndicator as string,",
+				"          FATCAStatus as boolean,",
+				"          AccountHolderType as string,",
+				"          ExternalAdministratorRef as boolean,",
+				"          ClientID as short,",
+				"          FLEXFATCAStatus as string,",
+				"          PoliticallyConnectedIndividual as boolean,",
+				"          DateofIncorporation as string,",
+				"          DIVTaxExemption as string,",
+				"          WTIExemption as string,",
+				"          WTIDTARates as string,",
+				"          UnitHolderType as string,",
+				"          CountryOfResidence as string,",
+				"          CIFNumber as integer,",
+				"          FamilyFees as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> UnitHolderSource",
+				"UnitHolderSource filter(!isNull(UnitHolderID)) ~> ExtractUnitHolder",
+				"ExtractUnitHolder sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedUnitHolderData"
+			]
+		}
+	}
+}

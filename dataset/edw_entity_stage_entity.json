@@ -1,0 +1,50 @@
+{
+	"name": "edw_entity_stage_entity",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "pps_edw_dev_db",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Entity Stage Tables"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Id",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "BatchId",
+				"type": "uniqueidentifier"
+			},
+			{
+				"name": "Provider",
+				"type": "varchar"
+			},
+			{
+				"name": "DataSource",
+				"type": "varchar"
+			},
+			{
+				"name": "EntityCode",
+				"type": "varchar"
+			},
+			{
+				"name": "EntityName",
+				"type": "varchar"
+			},
+			{
+				"name": "IsValid",
+				"type": "bit"
+			}
+		],
+		"typeProperties": {
+			"schema": "stage",
+			"table": "entity_all_entity"
+		}
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

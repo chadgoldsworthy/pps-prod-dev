@@ -1,0 +1,94 @@
+{
+	"name": "edw_extract_policy_beneficiaries_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "PolicyBeneficiariesSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedPolicyBeneficiariesData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractPolicyBeneficiaries"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          BeneficiaryID as long,",
+				"          UnitHolderID as long,",
+				"          ClientID as short,",
+				"          ProductID as string,",
+				"          PolicyNumber as string,",
+				"          BeneficiaryFirstName as string,",
+				"          BeneficiaryMiddleName as string,",
+				"          BeneficiaryLastName as string,",
+				"          BeneficiaryType as string,",
+				"          BeneficiaryRel as string,",
+				"          IDNumber as string,",
+				"          BeneficiaryPercentage as short,",
+				"          BeneficiaryAddress as string,",
+				"          CorrAddressline1 as string,",
+				"          CorrAddressline2 as string,",
+				"          CorrAddressline3 as short,",
+				"          CorrAddressline4 as string,",
+				"          DateOfBirth as date,",
+				"          RuleEffectiveDate as date,",
+				"          EmailAddress as string,",
+				"          TelephoneHomeNumber as long,",
+				"          TelephoneWorkNumber as string,",
+				"          CellPhoneNumber as integer,",
+				"          ModifiedStatus as string,",
+				"          PolicyBeneficiaryKey as integer,",
+				"          ProductKey as short,",
+				"          PolicyKey as integer,",
+				"          UnitHolderKey as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> PolicyBeneficiariesSource",
+				"PolicyBeneficiariesSource filter(!isNull(PolicyNumber)) ~> ExtractPolicyBeneficiaries",
+				"ExtractPolicyBeneficiaries sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedPolicyBeneficiariesData"
+			]
+		}
+	}
+}

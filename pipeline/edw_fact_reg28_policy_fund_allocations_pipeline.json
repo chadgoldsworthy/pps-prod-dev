@@ -1,0 +1,672 @@
+{
+	"name": "edw_fact_reg28_policy_fund_allocations_pipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "ExecuteStoredProc",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "LoadToStaging",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[stage].[load_fact_reg28_policy_fund_allocations]",
+					"storedProcedureParameters": {
+						"BatchId": {
+							"value": {
+								"value": "@variables('BatchId')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"DataSource": {
+							"value": {
+								"value": "@variables('DataSource')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"FileName": {
+							"value": {
+								"value": "@pipeline().parameters.SourceFileName",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IsAtomic": {
+							"value": {
+								"value": "@variables('IsAtomic')",
+								"type": "Expression"
+							},
+							"type": "Boolean"
+						},
+						"Provider": {
+							"value": {
+								"value": "@variables('Provider')",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "pps_edw_dev_db",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "LoadToStaging",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "ExecuteStoredProc Product",
+						"dependencyConditions": [
+							"Completed"
+						]
+					},
+					{
+						"activity": "ExecuteStoredProc Policy",
+						"dependencyConditions": [
+							"Completed"
+						]
+					},
+					{
+						"activity": "ExecuteStoredProc UnitHolder",
+						"dependencyConditions": [
+							"Completed"
+						]
+					},
+					{
+						"activity": "ExecuteStoredProc Fund",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "edw_sql_reg28_policy_fund_allocations_dataflow",
+						"type": "DataFlowReference",
+						"parameters": {
+							"BatchId": {
+								"value": "'@{variables('BatchId')}'",
+								"type": "Expression"
+							},
+							"FileName": {
+								"value": "'@{pipeline().parameters.SourceFileName}'",
+								"type": "Expression"
+							},
+							"FileDirectory": {
+								"value": "'@{variables('ExtractFileDirectory')}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"Reg28PolicyFundAllocationsSource": {
+								"ExtractFileName": {
+									"value": "@pipeline().parameters.SourceFileName",
+									"type": "Expression"
+								},
+								"ExtractFileDirectory": {
+									"value": "@variables('ExtractFileDirectory')",
+									"type": "Expression"
+								}
+							},
+							"LoadToReg28PolicyFundAllocationsStage": {
+								"TableName": {
+									"value": "@variables('StageTableName')",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					"integrationRuntime": {
+						"referenceName": "KeepAlive-Runtime",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "ExtractSourceData",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "CreateFileDirectory",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "CreateBatchId",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "edw_extract_reg28_policy_fund_allocations_dataflow",
+						"type": "DataFlowReference",
+						"parameters": {
+							"ExtractFileName": {
+								"value": "'@{pipeline().parameters.SourceFileName}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"Reg28PolicyFundAllocationsSource": {
+								"LandingFileName": {
+									"value": "@pipeline().parameters.SourceFileName",
+									"type": "Expression"
+								},
+								"LandingFileDirectory": {
+									"value": "@variables('LandingFileDirectory')",
+									"type": "Expression"
+								}
+							},
+							"ExportExtractedReg28PolicyFundAllocationsData": {
+								"ExtractFileName": {
+									"value": "@pipeline().parameters.SourceFileName",
+									"type": "Expression"
+								},
+								"ExtractFileDirectory": {
+									"value": "@variables('ExtractFileDirectory')",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceParameters": {
+							"ExportExtractedReg28PolicyFundAllocationsData": {
+								"linkedService": {
+									"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
+								},
+								"rejectedDataLinkedService": {
+									"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
+								}
+							}
+						}
+					},
+					"integrationRuntime": {
+						"referenceName": "KeepAlive-Runtime",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "CreateFileDirectory",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "ExtractFileDirectory",
+					"value": {
+						"value": "@concat(\n    'reg28 policy fund allocations/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "CreatePlaceholders",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "ExtractSourceData",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "edw_placeholder_reg28_policy_fund_allocations_dataflow",
+						"type": "DataFlowReference",
+						"parameters": {
+							"BatchId": {
+								"value": "'@{variables('BatchId')}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"Reg28PolicyFundAllocationsSource": {
+								"ExtractFileName": {
+									"value": "@pipeline().parameters.SourceFileName",
+									"type": "Expression"
+								},
+								"ExtractFileDirectory": {
+									"value": "@variables('ExtractFileDirectory')",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceParameters": {
+							"Reg28PolicyFundAllocationsSource": {
+								"schemaLinkedService": {
+									"ExtractFileName": {
+										"value": "@pipeline().parameters.SourceFileName",
+										"type": "Expression"
+									},
+									"ExtractFileDirectory": {
+										"value": "@variables('ExtractFileDirectory')",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					},
+					"integrationRuntime": {
+						"referenceName": "KeepAlive-Runtime",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "WriteToDatabricks",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "ExtractSourceData",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Shared/Notebooks/etl/stage/LoadDatalake",
+					"baseParameters": {
+						"batch_id": {
+							"value": "@variables('BatchId')",
+							"type": "Expression"
+						},
+						"file_name": {
+							"value": "@pipeline().parameters.SourceFileName",
+							"type": "Expression"
+						},
+						"is_atomic": {
+							"value": "@variables('IsAtomic')",
+							"type": "Expression"
+						},
+						"table": {
+							"value": "@variables('StageTableName')",
+							"type": "Expression"
+						},
+						"key_column": "PolicyNumber",
+						"data_source": {
+							"value": "@variables('DataSource')",
+							"type": "Expression"
+						},
+						"provider": {
+							"value": "@variables('Provider')",
+							"type": "Expression"
+						},
+						"file_directory": {
+							"value": "@variables('ExtractFileDirectory')",
+							"type": "Expression"
+						},
+						"key_column2": "FundID",
+						"key_column3": "SourceDataQuarterEndDate"
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "AzureDatabricksLinkedService",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "CreateBatchId",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "BatchId",
+					"value": {
+						"value": "@guid()",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "ExecuteStoredProc Product",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "CreatePlaceholders",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[stage].[load_entity_all_product]",
+					"storedProcedureParameters": {
+						"BatchId": {
+							"value": {
+								"value": "@variables('BatchId')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"DataSource": {
+							"value": {
+								"value": "@variables('DataSource')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"FileName": {
+							"value": {
+								"value": "@pipeline().parameters.SourceFileName",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IsAtomic": {
+							"value": {
+								"value": "@variables('IsAtomic')",
+								"type": "Expression"
+							},
+							"type": "Boolean"
+						},
+						"Provider": {
+							"value": {
+								"value": "@variables('Provider')",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "pps_edw_dev_db",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ExecuteStoredProc Policy",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "CreatePlaceholders",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[stage].[load_entity_all_policy]",
+					"storedProcedureParameters": {
+						"BatchId": {
+							"value": {
+								"value": "@variables('BatchId')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"DataSource": {
+							"value": {
+								"value": "@variables('DataSource')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"FileName": {
+							"value": {
+								"value": "@pipeline().parameters.SourceFileName",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IsAtomic": {
+							"value": {
+								"value": "@variables('IsAtomic')",
+								"type": "Expression"
+							},
+							"type": "Boolean"
+						},
+						"Provider": {
+							"value": {
+								"value": "@variables('Provider')",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "pps_edw_dev_db",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ExecuteStoredProc UnitHolder",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "CreatePlaceholders",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[stage].[load_entity_all_unit_holder]",
+					"storedProcedureParameters": {
+						"BatchId": {
+							"value": {
+								"value": "@variables('BatchId')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"DataSource": {
+							"value": {
+								"value": "@variables('DataSource')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"FileName": {
+							"value": {
+								"value": "@pipeline().parameters.SourceFileName",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IsAtomic": {
+							"value": {
+								"value": "@variables('IsAtomic')",
+								"type": "Expression"
+							},
+							"type": "Boolean"
+						},
+						"Provider": {
+							"value": {
+								"value": "@variables('Provider')",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "pps_edw_dev_db",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ExecuteStoredProc Fund",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "CreatePlaceholders",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[stage].[load_entity_all_fund]",
+					"storedProcedureParameters": {
+						"BatchId": {
+							"value": {
+								"value": "@variables('BatchId')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"DataSource": {
+							"value": {
+								"value": "@variables('DataSource')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"FileName": {
+							"value": {
+								"value": "@pipeline().parameters.SourceFileName",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IsAtomic": {
+							"value": {
+								"value": "@variables('IsAtomic')",
+								"type": "Expression"
+							},
+							"type": "Boolean"
+						},
+						"Provider": {
+							"value": {
+								"value": "@variables('Provider')",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "pps_edw_dev_db",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"SourceFileName": {
+				"type": "string",
+				"defaultValue": "Reg28PolicyFundSmall.txt"
+			}
+		},
+		"variables": {
+			"IsAtomic": {
+				"type": "String",
+				"defaultValue": "false"
+			},
+			"DataSource": {
+				"type": "String",
+				"defaultValue": "Reg28 Policy Fund Allocations Static Data"
+			},
+			"Provider": {
+				"type": "String",
+				"defaultValue": "PPS"
+			},
+			"StageTableName": {
+				"type": "String",
+				"defaultValue": "fact_reg28_policy_fund_allocations"
+			},
+			"BatchId": {
+				"type": "String"
+			},
+			"LandingFileDirectory": {
+				"type": "String",
+				"defaultValue": "reg28 policy fund allocations"
+			},
+			"ExtractFileDirectory": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "EDW/Fact"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-04-06T08:26:30Z"
+	},
+	"type": "Microsoft.Synapse/workspaces/pipelines"
+}

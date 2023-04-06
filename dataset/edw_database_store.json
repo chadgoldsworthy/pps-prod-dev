@@ -1,0 +1,97 @@
+{
+	"name": "edw_database_store",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "pps_edw_dev_db",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"TableName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Id",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "BatchId",
+				"type": "uniqueidentifier"
+			},
+			{
+				"name": "Action",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "Provider",
+				"type": "varchar"
+			},
+			{
+				"name": "DataSource",
+				"type": "varchar"
+			},
+			{
+				"name": "LoadCode",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "LoadDescription",
+				"type": "varchar"
+			},
+			{
+				"name": "LoadValue",
+				"type": "decimal",
+				"precision": 20,
+				"scale": 5
+			},
+			{
+				"name": "SlabNumber",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "SlabFromAmount",
+				"type": "decimal",
+				"precision": 20,
+				"scale": 5
+			},
+			{
+				"name": "SlabToAmount",
+				"type": "decimal",
+				"precision": 20,
+				"scale": 5
+			},
+			{
+				"name": "LoadCalcMethod",
+				"type": "varchar"
+			},
+			{
+				"name": "LoadType",
+				"type": "varchar"
+			},
+			{
+				"name": "LoadBasis",
+				"type": "varchar"
+			},
+			{
+				"name": "LoadKey",
+				"type": "bigint",
+				"precision": 19
+			}
+		],
+		"typeProperties": {
+			"schema": "store",
+			"table": {
+				"value": "@dataset().TableName",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

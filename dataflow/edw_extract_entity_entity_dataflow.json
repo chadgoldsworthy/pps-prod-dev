@@ -1,0 +1,96 @@
+{
+	"name": "edw_extract_entity_entity_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "EntitySource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportExtractedEntityData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractEntity"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          EntityID as string,",
+				"          EntityType as string,",
+				"          EntityName as string,",
+				"          EmailAddress as string,",
+				"          CorrAddressline1 as string,",
+				"          CorrAddressline2 as string,",
+				"          CorrAddressline3 as string,",
+				"          CorrAddressline4 as string,",
+				"          CorrPostCode as string,",
+				"          EntityRegistrationNumber as string,",
+				"          YearEndDate as string,",
+				"          ValuationDate as date,",
+				"          TaxRegistrationNumber as string,",
+				"          BankCode as string,",
+				"          BankName as string,",
+				"          BankBranchCode as string,",
+				"          BankBranchName as string,",
+				"          BankAccountType as string,",
+				"          BankAccountNumber as string,",
+				"          BankAccountHolderName as string,",
+				"          ContactPerson as string,",
+				"          ContactTelephoneNumber as string,",
+				"          GIINNumber as string,",
+				"          LegalEntityType as string,",
+				"          LegalEntityRegistrationNumber as string,",
+				"          FinswitchMancoID as string,",
+				"          FinswitchBulkID as string,",
+				"          FSBRegistrationNumber as string,",
+				"          FlexEntitykey as string,",
+				"          PAYENumber as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> EntitySource",
+				"EntitySource filter(!isNull(EntityID)) ~> ExtractEntity",
+				"ExtractEntity sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportExtractedEntityData"
+			]
+		}
+	}
+}

@@ -1,0 +1,77 @@
+{
+	"name": "edw_extract_distribution_component_master_dataflow",
+	"properties": {
+		"folder": {
+			"name": "EDW"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_landing",
+						"type": "DatasetReference"
+					},
+					"name": "DistributionComponentMasterSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "edw_source_file_extract",
+						"type": "DatasetReference"
+					},
+					"name": "ExportDistributionComponentMaster"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExtractDistributionComponentMaster"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ExtractFileName as string",
+				"}",
+				"source(output(",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          FinFieldNo as short,",
+				"          FinComponentDescription as string,",
+				"          DisplayName as string,",
+				"          RollupID as short,",
+				"          StatementHeader as string,",
+				"          SumStatementOrder as short,",
+				"          StatementOrder as short,",
+				"          DistributionComponentKey as string,",
+				"          TaxDescription as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> DistributionComponentMasterSource",
+				"DistributionComponentMasterSource filter(!isNull(DistributionComponentCode)) ~> ExtractDistributionComponentMaster",
+				"ExtractDistributionComponentMaster sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          FundID as string,",
+				"          DistributionComponentCode as string,",
+				"          DistributionComponentName as string,",
+				"          DistributionNumber as string,",
+				"          DistributionDate as string,",
+				"          DistributionComponentCPU as string,",
+				"          FreezeHoldingDate as string,",
+				"          FactFundDistributionKey as string,",
+				"          FundKey as string,",
+				"          DistributionComponentKey as string",
+				"     ),",
+				"     partitionFileNames:[($ExtractFileName)],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ExportDistributionComponentMaster"
+			]
+		}
+	}
+}
