@@ -156,7 +156,7 @@
 				"          ClientIdPlaceholder = 0,",
 				"          CessionDate = toDate(CessionDate, 'dd/MM/yyyy'),",
 				"          RuleEffectiveDate = toDate(RuleEffectiveDate, 'dd/MM/yyyy')) ~> DerivedColumn",
-				"ToUnitHolderLookup assert(expectTrue(!isNull(PolicyNumber) && !isNull(CessionDate), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+				"ToUnitHolderLookup assert(expectTrue(!isNull(StoreTransactionId), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
 				"ValidateData derive(IsValid = !isError()) ~> DeriveValidColumn",
 				"DeriveValidColumn filter(IsValid == false()) ~> FilterInvalidData",
 				"DerivedColumn, PolicyEntityTable lookup(PolicyNumber == StorePolicyNumber,",
