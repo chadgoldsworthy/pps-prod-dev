@@ -19,6 +19,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'pps_edw_dev_db'"
 		},
+		"pps_edw_prod_db_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'pps_edw_prod_db'"
+		},
 		"ppsi-synapse-prod-WorkspaceDefaultSqlServer_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'ppsi-synapse-prod-WorkspaceDefaultSqlServer'",
@@ -22429,6 +22433,25 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/pps_edw_prod_db')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('pps_edw_prod_db_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "KeepAlive-Runtime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/KeepAlive-Runtime')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/ppsi-synapse-prod-WorkspaceDefaultSqlServer')]",
 			"type": "Microsoft.Synapse/workspaces/linkedServices",
 			"apiVersion": "2019-06-01-preview",
@@ -23230,6 +23253,26 @@
 						}
 					}
 				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ChadLocal')]",
+			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/IntegrationRuntime1')]",
+			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {}
 			},
 			"dependsOn": []
 		},
@@ -24707,7 +24750,7 @@
 						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false) ~> PolicyCessionSource",
-						"PolicyCessionSource filter(!isNull(PolicyNumber) && !isNull(CessionDate)) ~> ExtractPolicyCession",
+						"PolicyCessionSource filter(!isNull(TransactionNumber) && !isNull(PolicyNumber) && !isNull(CessionDate)) ~> ExtractPolicyCession",
 						"ExtractPolicyCession sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
@@ -37395,7 +37438,7 @@
 						},
 						{
 							"linkedService": {
-								"referenceName": "pps_edw_dev_db",
+								"referenceName": "pps_edw_prod_db",
 								"type": "LinkedServiceReference"
 							},
 							"name": "ProductEntityTable"
@@ -37560,6 +37603,7 @@
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/datasets/edw_source_file_extract')]",
 				"[concat(variables('workspaceId'), '/linkedServices/pps_edw_dev_db')]",
+				"[concat(variables('workspaceId'), '/linkedServices/pps_edw_prod_db')]",
 				"[concat(variables('workspaceId'), '/linkedServices/data_lake_dev')]",
 				"[concat(variables('workspaceId'), '/datasets/edw_database_stage')]"
 			]
@@ -37724,7 +37768,7 @@
 						"          ClientIdPlaceholder = 0,",
 						"          CessionDate = toDate(CessionDate, 'dd/MM/yyyy'),",
 						"          RuleEffectiveDate = toDate(RuleEffectiveDate, 'dd/MM/yyyy')) ~> DerivedColumn",
-						"ToUnitHolderLookup assert(expectTrue(!isNull(PolicyNumber) && !isNull(CessionDate), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+						"ToUnitHolderLookup assert(expectTrue(!isNull(StoreTransactionId) && !isNull(StorePolicyId) && !isNull(CessionDate), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
 						"ValidateData derive(IsValid = !isError()) ~> DeriveValidColumn",
 						"DeriveValidColumn filter(IsValid == false()) ~> FilterInvalidData",
 						"DerivedColumn, PolicyEntityTable lookup(PolicyNumber == StorePolicyNumber,",

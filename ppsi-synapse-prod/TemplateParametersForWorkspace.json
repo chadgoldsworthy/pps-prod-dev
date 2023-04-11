@@ -14,6 +14,9 @@
 		"pps_edw_dev_db_connectionString": {
 			"value": ""
 		},
+		"pps_edw_prod_db_connectionString": {
+			"value": ""
+		},
 		"ppsi-synapse-prod-WorkspaceDefaultSqlServer_connectionString": {
 			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:ppsi-synapse-prod.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
 		},
