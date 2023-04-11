@@ -50,7 +50,7 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> PolicyCessionSource",
-				"PolicyCessionSource filter(!isNull(PolicyNumber) && !isNull(CessionDate)) ~> ExtractPolicyCession",
+				"PolicyCessionSource filter(!isNull(StoreTransactionId) && !isNull(StorePolicyId) && !isNull(CessionDate)) ~> ExtractPolicyCession",
 				"ExtractPolicyCession sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
