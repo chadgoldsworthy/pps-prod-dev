@@ -1,0 +1,6 @@
+{
+	"name": "ChadLocal",
+	"properties": {
+		"type": "SelfHosted"
+	}
+}
