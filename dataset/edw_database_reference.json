@@ -2,7 +2,7 @@
 	"name": "edw_database_reference",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "pps_edw_prod_db",
+			"referenceName": "pps_edw_dev_db",
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
