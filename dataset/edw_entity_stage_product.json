@@ -2,7 +2,7 @@
 	"name": "edw_entity_stage_product",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "pps_edw_dev_db",
+			"referenceName": "pps_edw_prod_db",
 			"type": "LinkedServiceReference"
 		},
 		"folder": {
