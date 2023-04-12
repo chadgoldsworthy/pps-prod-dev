@@ -2,7 +2,7 @@
 	"name": "edw_entity_stage_unit_holder",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "pps_edw_dev_db",
+			"referenceName": "pps_edw_dev_database",
 			"type": "LinkedServiceReference"
 		},
 		"folder": {
