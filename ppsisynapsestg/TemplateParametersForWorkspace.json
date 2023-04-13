@@ -1,0 +1,33 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"value": "ppsisynapsestg"
+		},
+		"AzureDatabricksLinkedService_accessToken": {
+			"value": ""
+		},
+		"data_lake_dev_connectionString": {
+			"value": ""
+		},
+		"pps_edw_dev_database_connectionString": {
+			"value": ""
+		},
+		"pps_edw_dev_db_connectionString": {
+			"value": ""
+		},
+		"pps_edw_prod_db_connectionString": {
+			"value": ""
+		},
+		"pps-synapse-dev-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"value": "https://ppsidatalakestg.dfs.core.windows.net"
+		},
+		"Authorised_Representative_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/e2aafd3f-2b28-4040-aa01-e0c618a3b3f8/resourceGroups/PPSI_Data_Enablement_STG/providers/Microsoft.Storage/storageAccounts/ppsidatalakestg"
+		},
+		"Broker_New_File_properties_typeProperties_scope": {
+			"value": "/subscriptions/e2aafd3f-2b28-4040-aa01-e0c618a3b3f8/resourceGroups/PPSI_Data_Enablement_STG/providers/Microsoft.Storage/storageAccounts/ppsidatalakestg"
+		}
+	}
+}
