@@ -62,7 +62,7 @@
 					}
 				},
 				"linkedServiceName": {
-					"referenceName": "pps_edw_dev_db",
+					"referenceName": "pps_edw_dev_database",
 					"type": "LinkedServiceReference"
 				}
 			},
@@ -397,7 +397,7 @@
 					}
 				},
 				"linkedServiceName": {
-					"referenceName": "pps_edw_dev_db",
+					"referenceName": "pps_edw_dev_database",
 					"type": "LinkedServiceReference"
 				}
 			}
