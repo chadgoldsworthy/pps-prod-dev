@@ -17,28 +17,28 @@
 				},
 				{
 					"linkedService": {
-						"referenceName": "pps_edw_dev_db",
+						"referenceName": "pps_edw_dev_database",
 						"type": "LinkedServiceReference"
 					},
 					"name": "PolicyEntityTable"
 				},
 				{
 					"linkedService": {
-						"referenceName": "pps_edw_dev_db",
+						"referenceName": "pps_edw_dev_database",
 						"type": "LinkedServiceReference"
 					},
 					"name": "ProductEntityTable"
 				},
 				{
 					"linkedService": {
-						"referenceName": "pps_edw_dev_db",
+						"referenceName": "pps_edw_dev_database",
 						"type": "LinkedServiceReference"
 					},
 					"name": "UnitHolderEntityTable"
 				},
 				{
 					"linkedService": {
-						"referenceName": "pps_edw_dev_db",
+						"referenceName": "pps_edw_dev_database",
 						"type": "LinkedServiceReference"
 					},
 					"name": "FundEntityTable"
@@ -47,7 +47,7 @@
 			"sinks": [
 				{
 					"linkedService": {
-						"referenceName": "data_lake_dev",
+						"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
 						"type": "LinkedServiceReference"
 					},
 					"name": "ExportInvalidData",
@@ -183,13 +183,16 @@
 				"FilterInvalidData sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'delimited',",
-				"     container: 'sql',",
+				"     fileSystem: 'sql',",
 				"     folderPath: (concat('errors/', $FileDirectory)),",
 				"     columnDelimiter: ',',",
 				"     escapeChar: '\\\\',",
 				"     quoteChar: '\\\"',",
 				"     columnNamesAsHeader: false,",
 				"     partitionFileNames:[($FileName)],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     partitionBy('hash', 1)) ~> ExportInvalidData",
