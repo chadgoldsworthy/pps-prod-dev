@@ -58,16 +58,6 @@
 									"type": "Expression"
 								}
 							}
-						},
-						"linkedServiceParameters": {
-							"LoadToPolicyDefaultAnnuitySource": {
-								"schemaLinkedService": {
-									"TableName": {
-										"value": "@variables('ReferenceTableName')",
-										"type": "Expression"
-									}
-								}
-							}
 						}
 					},
 					"integrationRuntime": {

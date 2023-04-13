@@ -58,16 +58,6 @@
 									"type": "Expression"
 								}
 							}
-						},
-						"linkedServiceParameters": {
-							"LoadToDistributionComponentMaster": {
-								"schemaLinkedService": {
-									"TableName": {
-										"value": "@variables('ReferenceTableName')",
-										"type": "Expression"
-									}
-								}
-							}
 						}
 					},
 					"integrationRuntime": {

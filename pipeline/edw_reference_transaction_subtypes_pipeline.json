@@ -58,16 +58,6 @@
 									"type": "Expression"
 								}
 							}
-						},
-						"linkedServiceParameters": {
-							"LoadToTransactionSubtypes": {
-								"schemaLinkedService": {
-									"TableName": {
-										"value": "@variables('ReferenceTableName')",
-										"type": "Expression"
-									}
-								}
-							}
 						}
 					},
 					"integrationRuntime": {

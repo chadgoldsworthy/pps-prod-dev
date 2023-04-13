@@ -38,7 +38,7 @@
 				},
 				{
 					"linkedService": {
-						"referenceName": "data_lake_dev",
+						"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
 						"type": "LinkedServiceReference"
 					},
 					"name": "ExportInvalidData"
@@ -111,13 +111,16 @@
 				"split1@Invalid sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'delimited',",
-				"     container: 'sql',",
+				"     fileSystem: 'sql',",
 				"     folderPath: (concat('errors/', $FileDirectory)),",
 				"     columnDelimiter: ',',",
 				"     escapeChar: '\\\\',",
 				"     quoteChar: '\\\"',",
 				"     columnNamesAsHeader: false,",
 				"     partitionFileNames:[($FileName)],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     partitionBy('hash', 1)) ~> ExportInvalidData"
