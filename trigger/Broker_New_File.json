@@ -2,14 +2,21 @@
 	"name": "Broker_New_File",
 	"properties": {
 		"annotations": [],
-		"runtimeState": "Stopped",
-		"pipelines": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "edw_entity_broker_pipeline",
+					"type": "PipelineReference"
+				}
+			}
+		],
 		"type": "BlobEventsTrigger",
 		"typeProperties": {
 			"blobPathBeginsWith": "/sql/blobs/landing/broker/",
 			"blobPathEndsWith": ".txt",
 			"ignoreEmptyBlobs": false,
-			"scope": "/subscriptions/7ec3a55c-45cd-42d5-ac73-d0c9959faf51/resourceGroups/pps-dev/providers/Microsoft.Storage/storageAccounts/ppsdatalakedev",
+			"scope": "/subscriptions/e2aafd3f-2b28-4040-aa01-e0c618a3b3f8/resourceGroups/PPSI_Data_Enablement_STG/providers/Microsoft.Storage/storageAccounts/ppsidatalakestg",
 			"events": [
 				"Microsoft.Storage.BlobCreated"
 			]
