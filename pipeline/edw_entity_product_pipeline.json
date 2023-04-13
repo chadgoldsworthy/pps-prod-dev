@@ -56,16 +56,6 @@
 									"type": "Expression"
 								}
 							}
-						},
-						"linkedServiceParameters": {
-							"LoadToEntityProductStage": {
-								"schemaLinkedService": {
-									"TableName": {
-										"value": "@variables('EntityTableName')",
-										"type": "Expression"
-									}
-								}
-							}
 						}
 					},
 					"integrationRuntime": {
@@ -135,7 +125,7 @@
 					}
 				},
 				"linkedServiceName": {
-					"referenceName": "pps_edw_dev_db",
+					"referenceName": "pps_edw_dev_database",
 					"type": "LinkedServiceReference"
 				}
 			},
@@ -191,28 +181,6 @@
 								"TableName": {
 									"value": "@variables('AttributesTableName')",
 									"type": "Expression"
-								}
-							}
-						},
-						"linkedServiceParameters": {
-							"ProductSource": {
-								"schemaLinkedService": {
-									"ExtractFileName": {
-										"value": "@pipeline().parameters.SourceFileName",
-										"type": "Expression"
-									},
-									"ExtractFileDirectory": {
-										"value": "@variables('ExtractFileDirectory')",
-										"type": "Expression"
-									}
-								}
-							},
-							"LoadToProductAttributesStage": {
-								"schemaLinkedService": {
-									"TableName": {
-										"value": "@variables('AttributesTableName')",
-										"type": "Expression"
-									}
 								}
 							}
 						}
@@ -284,7 +252,7 @@
 					}
 				},
 				"linkedServiceName": {
-					"referenceName": "pps_edw_dev_db",
+					"referenceName": "pps_edw_dev_database",
 					"type": "LinkedServiceReference"
 				}
 			},
