@@ -62,7 +62,7 @@
 					}
 				},
 				"linkedServiceName": {
-					"referenceName": "pps_edw_dev_db",
+					"referenceName": "pps_edw_dev_database",
 					"type": "LinkedServiceReference"
 				}
 			},
@@ -118,28 +118,6 @@
 								"TableName": {
 									"value": "@variables('StageTableName')",
 									"type": "Expression"
-								}
-							}
-						},
-						"linkedServiceParameters": {
-							"UnitHolderBankDetailsSource": {
-								"schemaLinkedService": {
-									"ExtractFileName": {
-										"value": "@pipeline().parameters.SourceFileName",
-										"type": "Expression"
-									},
-									"ExtractFileDirectory": {
-										"value": "@variables('ExtractFileDirectory')",
-										"type": "Expression"
-									}
-								}
-							},
-							"LoadToUnitHolderBankDetailsStage": {
-								"schemaLinkedService": {
-									"TableName": {
-										"value": "@variables('StageTableName')",
-										"type": "Expression"
-									}
 								}
 							}
 						}
@@ -441,7 +419,7 @@
 					}
 				},
 				"linkedServiceName": {
-					"referenceName": "pps_edw_dev_db",
+					"referenceName": "pps_edw_dev_database",
 					"type": "LinkedServiceReference"
 				}
 			}
