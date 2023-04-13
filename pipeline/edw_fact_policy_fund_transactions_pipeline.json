@@ -68,6 +68,9 @@
 									"type": "Expression"
 								}
 							},
+							"TransactionSubtypesReferenceTable": {
+								"TableName": "transaction_subtypes"
+							},
 							"LoadToFundTransactionsStage": {
 								"TableName": "fact_policy_fund_transactions"
 							}
