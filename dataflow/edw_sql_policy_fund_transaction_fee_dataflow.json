@@ -206,7 +206,7 @@
 				"     validateSchema: false,",
 				"     format: 'delimited',",
 				"     fileSystem: 'sql',",
-				"     folderPath: 'concat(\\'errors/\\', $FileDirectory)',",
+				"     folderPath: (concat('errors/', $FileDirectory)),",
 				"     columnDelimiter: ',',",
 				"     escapeChar: '\\\\',",
 				"     quoteChar: '\\\"',",
