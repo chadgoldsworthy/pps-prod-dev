@@ -419,7 +419,7 @@
 				"typeProperties": {
 					"variableName": "ExtractFileDirectory",
 					"value": {
-						"value": "@concat(\n    'unit holder/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+						"value": "@concat(\n    'unit_holder/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 						"type": "Expression"
 					}
 				}
@@ -462,7 +462,7 @@
 			},
 			"LandingFileDirectory": {
 				"type": "String",
-				"defaultValue": "unit holder"
+				"defaultValue": "unit_holder"
 			},
 			"ExtractFileDirectory": {
 				"type": "String"
@@ -474,6 +474,9 @@
 			"AttributesTableName": {
 				"type": "String",
 				"defaultValue": "dim_all_unit_holder_attributes"
+			},
+			"FormattedFileName": {
+				"type": "String"
 			}
 		},
 		"folder": {
