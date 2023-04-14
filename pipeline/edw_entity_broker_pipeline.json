@@ -31,7 +31,7 @@
 								"type": "Expression"
 							},
 							"FileName": {
-								"value": "'@{pipeline().parameters.SourceFileName}'",
+								"value": "'@{variables('FormattedFileName')}'",
 								"type": "Expression"
 							},
 							"FileDirectory": {
@@ -42,7 +42,7 @@
 						"datasetParameters": {
 							"BrokerSource": {
 								"ExtractFileName": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"ExtractFileDirectory": {
@@ -117,7 +117,7 @@
 						},
 						"FileName": {
 							"value": {
-								"value": "@pipeline().parameters.SourceFileName",
+								"value": "@variables('FormattedFileName')",
 								"type": "Expression"
 							},
 							"type": "String"
@@ -158,7 +158,7 @@
 								"type": "Expression"
 							},
 							"FileName": {
-								"value": "'@{pipeline().parameters.SourceFileName}'",
+								"value": "'@{variables('FormattedFileName')}'",
 								"type": "Expression"
 							},
 							"FileDirectory": {
@@ -169,7 +169,7 @@
 						"datasetParameters": {
 							"BrokerSource": {
 								"ExtractFileName": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"ExtractFileDirectory": {
@@ -230,7 +230,7 @@
 						},
 						"FileName": {
 							"value": {
-								"value": "@pipeline().parameters.SourceFileName",
+								"value": "@variables('FormattedFileName')",
 								"type": "Expression"
 							},
 							"type": "String"
@@ -271,6 +271,12 @@
 						"dependencyConditions": [
 							"Succeeded"
 						]
+					},
+					{
+						"activity": "CreateFileName",
+						"dependencyConditions": [
+							"Succeeded"
+						]
 					}
 				],
 				"policy": {
@@ -287,7 +293,7 @@
 						"type": "DataFlowReference",
 						"parameters": {
 							"ExtractFileName": {
-								"value": "'@{pipeline().parameters.SourceFileName}'",
+								"value": "'@{variables('FormattedFileName')}'",
 								"type": "Expression"
 							}
 						},
@@ -304,7 +310,7 @@
 							},
 							"ExportExtractedBrokerData": {
 								"ExtractFileName": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"ExtractFileDirectory": {
@@ -314,31 +320,9 @@
 							}
 						},
 						"linkedServiceParameters": {
-							"BrokerSource": {
-								"schemaLinkedService": {
-									"LandingFileName": {
-										"value": "@pipeline().parameters.SourceFileName",
-										"type": "Expression"
-									},
-									"LandingFileDirectory": {
-										"value": "@variables('LandingFileDirectory')",
-										"type": "Expression"
-									}
-								}
-							},
 							"ExportExtractedBrokerData": {
 								"linkedService": {
 									"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
-								},
-								"schemaLinkedService": {
-									"ExtractFileName": {
-										"value": "@pipeline().parameters.SourceFileName",
-										"type": "Expression"
-									},
-									"ExtractFileDirectory": {
-										"value": "@variables('ExtractFileDirectory')",
-										"type": "Expression"
-									}
 								},
 								"rejectedDataLinkedService": {
 									"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
@@ -393,7 +377,7 @@
 							"type": "Expression"
 						},
 						"file_name": {
-							"value": "@pipeline().parameters.SourceFileName",
+							"value": "@variables('FormattedFileName')",
 							"type": "Expression"
 						},
 						"is_atomic": {
@@ -436,6 +420,19 @@
 						"type": "Expression"
 					}
 				}
+			},
+			{
+				"name": "CreateFileName",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "FormattedFileName",
+					"value": {
+						"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss')\n    )",
+						"type": "Expression"
+					}
+				}
 			}
 		],
 		"parameters": {
@@ -474,6 +471,9 @@
 			"AttributesTableName": {
 				"type": "String",
 				"defaultValue": "dim_all_broker_attributes"
+			},
+			"FormattedFileName": {
+				"type": "String"
 			}
 		},
 		"folder": {
