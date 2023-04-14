@@ -429,7 +429,7 @@
 				"typeProperties": {
 					"variableName": "FormattedFileName",
 					"value": {
-						"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss')\n    )",
+						"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
 						"type": "Expression"
 					}
 				}
