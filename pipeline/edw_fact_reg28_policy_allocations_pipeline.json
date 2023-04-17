@@ -156,6 +156,12 @@
 						"dependencyConditions": [
 							"Succeeded"
 						]
+					},
+					{
+						"activity": "CreateFileName",
+						"dependencyConditions": [
+							"Succeeded"
+						]
 					}
 				],
 				"policy": {
@@ -541,6 +547,12 @@
 					"referenceName": "pps_edw_dev_database",
 					"type": "LinkedServiceReference"
 				}
+			},
+			{
+				"name": "CreateFileName",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": []
 			}
 		],
 		"parameters": {
@@ -574,6 +586,9 @@
 				"defaultValue": "reg28 policy allocations"
 			},
 			"ExtractFileDirectory": {
+				"type": "String"
+			},
+			"FormattedFileName": {
 				"type": "String"
 			}
 		},
