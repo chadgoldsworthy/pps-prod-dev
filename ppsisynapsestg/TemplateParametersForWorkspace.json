@@ -22,6 +22,12 @@
 		},
 		"pps-synapse-dev-WorkspaceDefaultStorage_properties_typeProperties_url": {
 			"value": "https://ppsidatalakestg.dfs.core.windows.net"
+		},
+		"trigger_landing_broker_properties_edw_entity_broker_pipeline_parameters_SourceFileName": {
+			"value": "@trigger().outputs.body.fileName"
+		},
+		"trigger_landing_broker_properties_typeProperties_scope": {
+			"value": "/subscriptions/e2aafd3f-2b28-4040-aa01-e0c618a3b3f8/resourceGroups/PPSI_Data_Enablement_STG/providers/Microsoft.Storage/storageAccounts/ppsidatalakestg"
 		}
 	}
 }
