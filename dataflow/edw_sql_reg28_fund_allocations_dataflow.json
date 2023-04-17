@@ -96,7 +96,7 @@
 				"FactReg28AssetAllocationsSource derive(BatchId = $BatchId,",
 				"          Provider = \"PPS\",",
 				"          DataSource = \"Reg28 Fund Allocations Static Data\") ~> DerivedColumn",
-				"FundLookup assert(expectTrue(!isNull(JSECode) && !isNull(QuarterEndDate), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+				"FundLookup assert(expectTrue(!isNull(JSECode) && !isNull(QuarterEndDate) && !isNull(StoreFundId), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
 				"ValidateData derive(IsValid = !isError()) ~> DeriveValidColumn",
 				"DeriveValidColumn filter(IsValid == false()) ~> FilterInvalidData",
 				"DerivedColumn, FundEntityTable lookup(JSECode == StoreJSECode,",
