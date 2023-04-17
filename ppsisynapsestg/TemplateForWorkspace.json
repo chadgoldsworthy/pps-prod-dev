@@ -30,14 +30,6 @@
 		"pps-synapse-dev-WorkspaceDefaultStorage_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://ppsidatalakestg.dfs.core.windows.net"
-		},
-		"Authorised_Representative_New_File_properties_typeProperties_scope": {
-			"type": "string",
-			"defaultValue": "/subscriptions/e2aafd3f-2b28-4040-aa01-e0c618a3b3f8/resourceGroups/PPSI_Data_Enablement_STG/providers/Microsoft.Storage/storageAccounts/ppsidatalakestg"
-		},
-		"Broker_New_File_properties_typeProperties_scope": {
-			"type": "string",
-			"defaultValue": "/subscriptions/e2aafd3f-2b28-4040-aa01-e0c618a3b3f8/resourceGroups/PPSI_Data_Enablement_STG/providers/Microsoft.Storage/storageAccounts/ppsidatalakestg"
 		}
 	},
 	"variables": {
@@ -79,7 +71,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -90,7 +82,7 @@
 								"datasetParameters": {
 									"AuthorisedRepresentativeSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -167,7 +159,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -208,7 +200,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -219,7 +211,7 @@
 								"datasetParameters": {
 									"AuthorisedRepresentativeSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -283,7 +275,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -324,6 +316,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -340,7 +338,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -357,7 +355,7 @@
 									},
 									"ExportExtractedAuthorisedRepresentativeData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -367,31 +365,9 @@
 									}
 								},
 								"linkedServiceParameters": {
-									"AuthorisedRepresentativeSource": {
-										"schemaLinkedService": {
-											"LandingFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"LandingFileDirectory": {
-												"value": "@variables('LandingFileDirectory')",
-												"type": "Expression"
-											}
-										}
-									},
 									"ExportExtractedAuthorisedRepresentativeData": {
 										"linkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
-										},
-										"schemaLinkedService": {
-											"ExtractFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"ExtractFileDirectory": {
-												"value": "@variables('ExtractFileDirectory')",
-												"type": "Expression"
-											}
 										},
 										"rejectedDataLinkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
@@ -415,7 +391,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'authorised representative/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'authorised_representative/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -447,7 +423,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -490,6 +466,19 @@
 								"type": "Expression"
 							}
 						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
+						}
 					}
 				],
 				"policy": {
@@ -520,7 +509,7 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "authorised representative"
+						"defaultValue": "authorised_representative"
 					},
 					"ExtractFileDirectory": {
 						"type": "String"
@@ -532,6 +521,9 @@
 					"AttributesTableName": {
 						"type": "String",
 						"defaultValue": "dim_all_authorised_representative_attributes"
+					},
+					"FormattedFileName": {
+						"type": "String"
 					}
 				},
 				"folder": {
@@ -584,7 +576,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -595,7 +587,7 @@
 								"datasetParameters": {
 									"BrokerSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -672,7 +664,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -713,7 +705,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -724,7 +716,7 @@
 								"datasetParameters": {
 									"BrokerSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -788,7 +780,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -829,6 +821,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -845,7 +843,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -862,7 +860,7 @@
 									},
 									"ExportExtractedBrokerData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -872,31 +870,9 @@
 									}
 								},
 								"linkedServiceParameters": {
-									"BrokerSource": {
-										"schemaLinkedService": {
-											"LandingFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"LandingFileDirectory": {
-												"value": "@variables('LandingFileDirectory')",
-												"type": "Expression"
-											}
-										}
-									},
 									"ExportExtractedBrokerData": {
 										"linkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
-										},
-										"schemaLinkedService": {
-											"ExtractFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"ExtractFileDirectory": {
-												"value": "@variables('ExtractFileDirectory')",
-												"type": "Expression"
-											}
 										},
 										"rejectedDataLinkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
@@ -952,7 +928,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -992,6 +968,19 @@
 							"variableName": "BatchId",
 							"value": {
 								"value": "@guid()",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
 								"type": "Expression"
 							}
 						}
@@ -1037,6 +1026,9 @@
 					"AttributesTableName": {
 						"type": "String",
 						"defaultValue": "dim_all_broker_attributes"
+					},
+					"FormattedFileName": {
+						"type": "String"
 					}
 				},
 				"folder": {
@@ -1089,7 +1081,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -1100,7 +1092,7 @@
 								"datasetParameters": {
 									"BrokerageSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -1177,7 +1169,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -1218,7 +1210,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -1229,7 +1221,7 @@
 								"datasetParameters": {
 									"BrokerageSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -1293,7 +1285,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -1334,6 +1326,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -1350,7 +1348,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -1367,7 +1365,7 @@
 									},
 									"ExportExtractedBrokerageData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -1435,7 +1433,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -1475,6 +1473,19 @@
 							"variableName": "BatchId",
 							"value": {
 								"value": "@guid()",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
 								"type": "Expression"
 							}
 						}
@@ -1520,6 +1531,9 @@
 					"AttributesTableName": {
 						"type": "String",
 						"defaultValue": "dim_all_brokerage_attributes"
+					},
+					"FormattedFileName": {
+						"type": "String"
 					}
 				},
 				"folder": {
@@ -1572,7 +1586,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -1583,7 +1597,7 @@
 								"datasetParameters": {
 									"EntitySource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -1660,7 +1674,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -1701,7 +1715,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -1712,7 +1726,7 @@
 								"datasetParameters": {
 									"EntitySource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -1776,7 +1790,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -1817,6 +1831,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -1833,7 +1853,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -1850,7 +1870,7 @@
 									},
 									"ExportExtractedEntityData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -1860,31 +1880,9 @@
 									}
 								},
 								"linkedServiceParameters": {
-									"EntitySource": {
-										"schemaLinkedService": {
-											"LandingFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"LandingFileDirectory": {
-												"value": "@variables('LandingFileDirectory')",
-												"type": "Expression"
-											}
-										}
-									},
 									"ExportExtractedEntityData": {
 										"linkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
-										},
-										"schemaLinkedService": {
-											"ExtractFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"ExtractFileDirectory": {
-												"value": "@variables('ExtractFileDirectory')",
-												"type": "Expression"
-											}
 										},
 										"rejectedDataLinkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
@@ -1940,7 +1938,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -1980,6 +1978,19 @@
 							"variableName": "BatchId",
 							"value": {
 								"value": "@guid()",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
 								"type": "Expression"
 							}
 						}
@@ -2025,6 +2036,9 @@
 					"AttributesTableName": {
 						"type": "String",
 						"defaultValue": "dim_all_entity_attributes"
+					},
+					"FormattedFileName": {
+						"type": "String"
 					}
 				},
 				"folder": {
@@ -2077,7 +2091,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -2088,7 +2102,7 @@
 								"datasetParameters": {
 									"FundSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -2165,7 +2179,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -2215,7 +2229,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -2270,7 +2284,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -2281,7 +2295,7 @@
 								"datasetParameters": {
 									"FundSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -2322,6 +2336,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -2338,7 +2358,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -2355,7 +2375,7 @@
 									},
 									"ExportExtractedFundData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -2365,31 +2385,9 @@
 									}
 								},
 								"linkedServiceParameters": {
-									"FundSource": {
-										"schemaLinkedService": {
-											"LandingFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"LandingFileDirectory": {
-												"value": "@variables('LandingFileDirectory')",
-												"type": "Expression"
-											}
-										}
-									},
 									"ExportExtractedFundData": {
 										"linkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
-										},
-										"schemaLinkedService": {
-											"ExtractFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"ExtractFileDirectory": {
-												"value": "@variables('ExtractFileDirectory')",
-												"type": "Expression"
-											}
 										},
 										"rejectedDataLinkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
@@ -2445,7 +2443,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -2485,6 +2483,19 @@
 							"variableName": "BatchId",
 							"value": {
 								"value": "@guid()",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
 								"type": "Expression"
 							}
 						}
@@ -2530,6 +2541,9 @@
 					"AttributesTableName": {
 						"type": "String",
 						"defaultValue": "dim_all_fund_attributes"
+					},
+					"FormattedFileName": {
+						"type": "String"
 					}
 				},
 				"folder": {
@@ -2588,7 +2602,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FromattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -2599,7 +2613,7 @@
 								"datasetParameters": {
 									"PolicySource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FromattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -2678,7 +2692,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FromattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -2719,7 +2733,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FromattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -2730,7 +2744,7 @@
 								"datasetParameters": {
 									"PolicySource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FromattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -2795,7 +2809,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FromattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -2836,6 +2850,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -2852,7 +2872,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FromattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -2869,7 +2889,7 @@
 									},
 									"ExportExtractedPolicyData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FromattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -2879,31 +2899,9 @@
 									}
 								},
 								"linkedServiceParameters": {
-									"PolicySource": {
-										"schemaLinkedService": {
-											"LandingFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"LandingFileDirectory": {
-												"value": "@variables('LandingFileDirectory')",
-												"type": "Expression"
-											}
-										}
-									},
 									"ExportExtractedPolicyData": {
 										"linkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
-										},
-										"schemaLinkedService": {
-											"ExtractFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"ExtractFileDirectory": {
-												"value": "@variables('ExtractFileDirectory')",
-												"type": "Expression"
-											}
 										},
 										"rejectedDataLinkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
@@ -2959,7 +2957,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FromattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -3022,7 +3020,7 @@
 								"datasetParameters": {
 									"PolicySource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FromattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -3093,7 +3091,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FromattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -3157,7 +3155,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FromattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -3181,6 +3179,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FromattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -3224,6 +3235,9 @@
 					"AttributesTableName": {
 						"type": "String",
 						"defaultValue": "dim_all_policy_attributes"
+					},
+					"FromattedFileName": {
+						"type": "String"
 					}
 				},
 				"folder": {
@@ -3277,7 +3291,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -3288,7 +3302,7 @@
 								"datasetParameters": {
 									"ProductSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -3365,7 +3379,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -3406,7 +3420,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -3417,7 +3431,7 @@
 								"datasetParameters": {
 									"ProductSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -3481,7 +3495,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -3522,6 +3536,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -3538,7 +3558,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -3555,7 +3575,7 @@
 									},
 									"ExportExtractedProductData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -3623,7 +3643,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -3663,6 +3683,19 @@
 							"variableName": "BatchId",
 							"value": {
 								"value": "@guid()",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
 								"type": "Expression"
 							}
 						}
@@ -3708,6 +3741,9 @@
 					"AttributesTableName": {
 						"type": "String",
 						"defaultValue": "dim_all_product_attributes"
+					},
+					"FormattedFileName": {
+						"type": "String"
 					}
 				},
 				"folder": {
@@ -3760,7 +3796,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -3771,7 +3807,7 @@
 								"datasetParameters": {
 									"UnitHolderSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -3848,7 +3884,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -3889,7 +3925,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -3900,7 +3936,7 @@
 								"datasetParameters": {
 									"UnitHolderSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -3964,7 +4000,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -4005,6 +4041,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -4021,7 +4063,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -4038,7 +4080,7 @@
 									},
 									"ExportExtractedUnitHolderData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -4048,31 +4090,9 @@
 									}
 								},
 								"linkedServiceParameters": {
-									"UnitHolderSource": {
-										"schemaLinkedService": {
-											"LandingFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"LandingFileDirectory": {
-												"value": "@variables('LandingFileDirectory')",
-												"type": "Expression"
-											}
-										}
-									},
 									"ExportExtractedUnitHolderData": {
 										"linkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
-										},
-										"schemaLinkedService": {
-											"ExtractFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"ExtractFileDirectory": {
-												"value": "@variables('ExtractFileDirectory')",
-												"type": "Expression"
-											}
 										},
 										"rejectedDataLinkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
@@ -4115,7 +4135,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -4154,7 +4174,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'unit holder/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'unit_holder/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -4168,6 +4188,19 @@
 							"variableName": "BatchId",
 							"value": {
 								"value": "@guid()",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
 								"type": "Expression"
 							}
 						}
@@ -4201,7 +4234,7 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "unit holder"
+						"defaultValue": "unit_holder"
 					},
 					"ExtractFileDirectory": {
 						"type": "String"
@@ -4213,6 +4246,9 @@
 					"AttributesTableName": {
 						"type": "String",
 						"defaultValue": "dim_all_unit_holder_attributes"
+					},
+					"FormattedFileName": {
+						"type": "String"
 					}
 				},
 				"folder": {
@@ -4274,7 +4310,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -4329,7 +4365,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -4340,7 +4376,7 @@
 								"datasetParameters": {
 									"DistributionSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -4381,6 +4417,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -4397,7 +4439,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -4414,7 +4456,7 @@
 									},
 									"ExportExtractedDistributionData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -4450,7 +4492,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'fund distribution/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'fund_distribution/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -4487,7 +4529,7 @@
 								"datasetParameters": {
 									"DistributionSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -4533,7 +4575,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -4615,7 +4657,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -4639,6 +4681,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -4674,9 +4729,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "fund distribution"
+						"defaultValue": "fund_distribution"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -4739,7 +4797,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -4794,7 +4852,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -4805,7 +4863,7 @@
 								"datasetParameters": {
 									"InitialFundPricesSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -4846,6 +4904,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -4862,7 +4926,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -4879,7 +4943,7 @@
 									},
 									"ExportExtractedFundPricesData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -4915,7 +4979,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'fund prices/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'fund_prices/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -4952,7 +5016,7 @@
 								"datasetParameters": {
 									"InitialPolicyFundRatioSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -4998,7 +5062,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -5081,7 +5145,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -5105,6 +5169,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -5136,7 +5213,7 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "fund prices"
+						"defaultValue": "fund_prices"
 					},
 					"ExtractFileDirectory": {
 						"type": "String"
@@ -5144,6 +5221,9 @@
 					"StageTableName": {
 						"type": "String",
 						"defaultValue": "fact_fund_prices"
+					},
+					"FormattedFileName": {
+						"type": "String"
 					}
 				},
 				"folder": {
@@ -5205,7 +5285,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -5272,7 +5352,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -5283,7 +5363,7 @@
 								"datasetParameters": {
 									"InitialPolicyFundRatioSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -5326,6 +5406,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -5342,7 +5428,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -5359,7 +5445,7 @@
 									},
 									"ExportExtractedInitialPolicyFundRatioData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -5395,7 +5481,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'initial policy fund ratio/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'initial_policy_fund_ratio/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -5432,7 +5518,7 @@
 								"datasetParameters": {
 									"InitialPolicyFundRatioSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -5480,7 +5566,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -5563,7 +5649,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -5627,7 +5713,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -5691,7 +5777,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -5715,6 +5801,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -5750,9 +5849,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "initial policy fund ratio"
+						"defaultValue": "initial_policy_fund_ratio"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -5806,7 +5908,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -5817,7 +5919,7 @@
 								"datasetParameters": {
 									"LoadSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -5894,7 +5996,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -5921,6 +6023,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -5937,7 +6045,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -5954,7 +6062,7 @@
 									},
 									"ExportExtractedLoadData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -6022,7 +6130,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -6065,6 +6173,19 @@
 								"type": "Expression"
 							}
 						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
+						}
 					}
 				],
 				"policy": {
@@ -6102,6 +6223,9 @@
 						"defaultValue": "load"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -6163,7 +6287,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -6230,7 +6354,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -6241,7 +6365,7 @@
 								"datasetParameters": {
 									"PolicyBeneficiariesSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -6290,6 +6414,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -6306,7 +6436,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -6323,7 +6453,7 @@
 									},
 									"ExportExtractedPolicyBeneficiariesData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -6359,7 +6489,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'policy beneficiaries/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'policy_beneficiaries/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -6396,7 +6526,7 @@
 								"datasetParameters": {
 									"PolicyBeneficiariesSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -6444,7 +6574,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -6541,7 +6671,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -6608,7 +6738,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -6619,7 +6749,7 @@
 								"datasetParameters": {
 									"PolicyBeneficiariesSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -6685,7 +6815,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -6749,7 +6879,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -6813,7 +6943,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -6837,6 +6967,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -6879,9 +7022,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "policy beneficiaries"
+						"defaultValue": "policy_beneficiaries"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -6945,7 +7091,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -7006,7 +7152,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -7017,7 +7163,7 @@
 								"datasetParameters": {
 									"PolicyBrokerSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -7059,6 +7205,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -7075,7 +7227,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -7092,7 +7244,7 @@
 									},
 									"ExportExtractedPolicyBrokerData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -7128,7 +7280,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'policy broker/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'policy_broker/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -7165,7 +7317,7 @@
 								"datasetParameters": {
 									"PolicBrokerSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -7212,7 +7364,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -7295,7 +7447,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -7359,7 +7511,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -7383,6 +7535,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -7418,9 +7583,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "policy broker"
+						"defaultValue": "policy_broker"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -7483,7 +7651,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -7550,7 +7718,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -7561,7 +7729,7 @@
 								"datasetParameters": {
 									"PolicyCessionSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -7602,6 +7770,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -7618,7 +7792,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -7635,7 +7809,7 @@
 									},
 									"ExportExtractedPolicyCessionData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -7671,7 +7845,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'policy cession/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'policy_cession/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -7708,7 +7882,7 @@
 								"datasetParameters": {
 									"PolicyCessionSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -7756,7 +7930,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -7839,7 +8013,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -7903,7 +8077,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -7967,7 +8141,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -7991,6 +8165,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -8026,9 +8213,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "policy cession"
+						"defaultValue": "policy_cession"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -8091,7 +8281,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -8164,7 +8354,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -8175,7 +8365,7 @@
 								"datasetParameters": {
 									"DealSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -8219,6 +8409,12 @@
 								"dependencyConditions": [
 									"Completed"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -8235,7 +8431,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -8252,7 +8448,7 @@
 									},
 									"ExportExtractedDealData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -8288,7 +8484,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'policy deal/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'policy_deal/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -8325,7 +8521,7 @@
 								"datasetParameters": {
 									"DealSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -8376,7 +8572,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -8459,7 +8655,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -8523,7 +8719,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -8587,7 +8783,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -8651,7 +8847,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -8675,6 +8871,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -8710,9 +8919,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "policy deal"
+						"defaultValue": "policy_deal"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -8775,7 +8987,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -8848,7 +9060,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -8859,7 +9071,7 @@
 								"datasetParameters": {
 									"DistributionComponentSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -8905,6 +9117,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -8921,7 +9139,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -8938,7 +9156,7 @@
 									},
 									"ExportExtractedDistributionComponentData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -8974,7 +9192,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'policy distribution component/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'policy_distribution_component/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -9011,7 +9229,7 @@
 								"datasetParameters": {
 									"FactDistributionComponentSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -9063,7 +9281,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -9146,7 +9364,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -9210,7 +9428,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -9274,7 +9492,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -9338,7 +9556,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -9362,6 +9580,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -9397,9 +9628,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "policy distribution component"
+						"defaultValue": "policy_distribution_component"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -9462,7 +9696,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -9529,7 +9763,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -9540,7 +9774,7 @@
 								"datasetParameters": {
 									"FeeStatementComponentSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -9584,6 +9818,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -9600,7 +9840,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -9617,7 +9857,7 @@
 									},
 									"ExportExtractedFeeStatementData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -9653,7 +9893,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'policy fee statement/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'policy_fee_statement/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -9690,7 +9930,7 @@
 								"datasetParameters": {
 									"FactFeeStatementSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -9738,7 +9978,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -9820,7 +10060,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -9884,7 +10124,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -9948,7 +10188,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -9972,6 +10212,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -10007,9 +10260,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "policy fee statement"
+						"defaultValue": "policy_fee_statement"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -10093,7 +10349,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -10104,7 +10360,7 @@
 								"datasetParameters": {
 									"CommissionStatementSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -10177,7 +10433,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -10235,7 +10491,7 @@
 								"datasetParameters": {
 									"CommissionStatementSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -10277,6 +10533,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -10293,7 +10555,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -10310,7 +10572,7 @@
 									},
 									"ExportExtractedCommissionStatementData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -10346,7 +10608,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'policy fund commission statement/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'policy_fund_commission_statement/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -10378,7 +10640,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -10460,7 +10722,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -10524,7 +10786,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -10588,7 +10850,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -10652,7 +10914,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -10716,7 +10978,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -10780,7 +11042,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -10804,6 +11066,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -10839,9 +11114,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "policy fund commission statement"
+						"defaultValue": "policy_fund_commission_statement"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -10898,7 +11176,7 @@
 								"datasetParameters": {
 									"DailyHoldingsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -10958,7 +11236,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -11031,7 +11309,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -11042,7 +11320,7 @@
 								"datasetParameters": {
 									"DailyHoldingsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -11086,6 +11364,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -11102,7 +11386,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -11119,7 +11403,7 @@
 									},
 									"ExportExtractedDailyHoldingsData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -11155,7 +11439,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'policy fund holdings/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'policy_fund_holdings/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -11187,7 +11471,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -11270,7 +11554,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -11334,7 +11618,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -11398,7 +11682,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -11462,7 +11746,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -11486,6 +11770,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -11521,9 +11818,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "policy fund holdings"
+						"defaultValue": "policy_fund_holdings"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -11586,7 +11886,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -11665,7 +11965,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -11676,7 +11976,7 @@
 								"datasetParameters": {
 									"TransactionFeeSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -11718,6 +12018,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -11734,7 +12040,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -11751,7 +12057,7 @@
 									},
 									"ExportFactTransactionFeeData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -11787,7 +12093,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'policy fund transaction fee/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'policy_fund_transaction_fee/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -11824,7 +12130,7 @@
 								"datasetParameters": {
 									"FactTransactionFeeSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -11876,7 +12182,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -11958,7 +12264,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -12022,7 +12328,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -12086,7 +12392,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -12150,7 +12456,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -12214,7 +12520,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -12238,6 +12544,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -12273,9 +12592,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "policy fund transaction fee"
+						"defaultValue": "policy_fund_transaction_fee"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -12347,7 +12669,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -12358,7 +12680,7 @@
 								"datasetParameters": {
 									"FundTransactionsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -12428,7 +12750,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -12486,7 +12808,7 @@
 								"datasetParameters": {
 									"FundTransactionsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -12532,6 +12854,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -12548,7 +12876,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -12565,7 +12893,7 @@
 									},
 									"ExportExtractedFundTransactionsData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -12601,7 +12929,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'policy fund transactions/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'policy_fund_transactions/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -12633,7 +12961,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -12737,7 +13065,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -12748,7 +13076,7 @@
 								"datasetParameters": {
 									"FundTransactionsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -12818,7 +13146,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -12882,7 +13210,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -12946,7 +13274,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -13010,7 +13338,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -13074,7 +13402,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -13098,6 +13426,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -13140,9 +13481,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "policy fund transactions"
+						"defaultValue": "policy_fund_transactions"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -13206,7 +13550,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -13273,7 +13617,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -13284,7 +13628,7 @@
 								"datasetParameters": {
 									"PolicyLivesAssuredSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -13333,6 +13677,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -13349,7 +13699,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -13366,7 +13716,7 @@
 									},
 									"ExportExtractedPolicyLivesAssuredData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -13402,7 +13752,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'policy lives assured/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'policy_lives_assured/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -13439,7 +13789,7 @@
 								"datasetParameters": {
 									"PolicyLivesAssuredSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -13487,7 +13837,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -13583,7 +13933,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -13650,7 +14000,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -13661,7 +14011,7 @@
 								"datasetParameters": {
 									"PolicyLivesAssuredSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -13727,7 +14077,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -13791,7 +14141,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -13855,7 +14205,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -13879,6 +14229,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -13921,9 +14284,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "policy lives assured"
+						"defaultValue": "policy_lives_assured"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -13987,7 +14353,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -14054,7 +14420,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -14065,7 +14431,7 @@
 								"datasetParameters": {
 									"PayeeSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -14108,6 +14474,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -14124,7 +14496,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -14141,7 +14513,7 @@
 									},
 									"ExportExtractedPayeeData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -14177,7 +14549,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'policy payee/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'policy_payee/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -14214,7 +14586,7 @@
 								"datasetParameters": {
 									"PayeeSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -14262,7 +14634,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -14344,7 +14716,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -14408,7 +14780,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -14472,7 +14844,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -14496,6 +14868,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -14531,9 +14916,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "policy payee"
+						"defaultValue": "policy_payee"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -14596,7 +14984,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -14669,7 +15057,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -14680,7 +15068,7 @@
 								"datasetParameters": {
 									"StandingInstructionAllocationsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -14725,6 +15113,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -14741,7 +15135,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -14758,7 +15152,7 @@
 									},
 									"ExportExtractedStandingInstructionAllocationsData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -14818,7 +15212,7 @@
 								"datasetParameters": {
 									"StandingInstructionAllocationsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -14867,7 +15261,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -14950,7 +15344,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -15014,7 +15408,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -15078,7 +15472,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -15142,7 +15536,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -15176,7 +15570,20 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'policy standing instruction allocations/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'policy_standing_instruction_allocations/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
 								"type": "Expression"
 							}
 						}
@@ -15214,9 +15621,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "policy standing instruction allocations"
+						"defaultValue": "policy_standing_instruction_allocations"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -15279,7 +15689,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -15340,7 +15750,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -15351,7 +15761,7 @@
 								"datasetParameters": {
 									"StandingInstructionAllocationsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -15393,6 +15803,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -15409,7 +15825,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -15426,7 +15842,7 @@
 									},
 									"ExportExtractedStandingInstructionData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -15462,7 +15878,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'policy standing instruction/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'policy_standing_instruction/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -15499,7 +15915,7 @@
 								"datasetParameters": {
 									"StandingInstructionAllocationsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -15546,7 +15962,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -15630,7 +16046,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -15694,7 +16110,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -15718,6 +16134,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -15753,9 +16182,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "policy standing instruction"
+						"defaultValue": "policy_standing_instruction"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -15818,7 +16250,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -15879,7 +16311,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -15890,7 +16322,7 @@
 								"datasetParameters": {
 									"ProductFundAccountsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -15922,13 +16354,19 @@
 						"type": "ExecuteDataFlow",
 						"dependsOn": [
 							{
-								"activity": "ExtractFileDirectory",
+								"activity": "SetFileDirectory",
 								"dependencyConditions": [
 									"Succeeded"
 								]
 							},
 							{
 								"activity": "CreateBatchId",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "CreateFileName",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -15948,7 +16386,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -15965,7 +16403,7 @@
 									},
 									"ExportExtractedProductFundAccountsData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -15975,31 +16413,9 @@
 									}
 								},
 								"linkedServiceParameters": {
-									"ProductFundAccountsSource": {
-										"schemaLinkedService": {
-											"LandingFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"LandingFileDirectory": {
-												"value": "@variables('LandingFileDirectory')",
-												"type": "Expression"
-											}
-										}
-									},
 									"ExportExtractedProductFundAccountsData": {
 										"linkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
-										},
-										"schemaLinkedService": {
-											"ExtractFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"ExtractFileDirectory": {
-												"value": "@variables('ExtractFileDirectory')",
-												"type": "Expression"
-											}
 										},
 										"rejectedDataLinkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
@@ -16016,14 +16432,14 @@
 						}
 					},
 					{
-						"name": "ExtractFileDirectory",
+						"name": "SetFileDirectory",
 						"type": "SetVariable",
 						"dependsOn": [],
 						"userProperties": [],
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'product fund accounts/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'product_fund_accounts/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -16060,7 +16476,7 @@
 								"datasetParameters": {
 									"ProductFundAccountsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -16070,20 +16486,6 @@
 									},
 									"LoadProductEntity": {},
 									"LoadFundEntity": {}
-								},
-								"linkedServiceParameters": {
-									"ProductFundAccountsSource": {
-										"schemaLinkedService": {
-											"ExtractFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"ExtractFileDirectory": {
-												"value": "@variables('ExtractFileDirectory')",
-												"type": "Expression"
-											}
-										}
-									}
 								}
 							},
 							"staging": {},
@@ -16121,7 +16523,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -16205,7 +16607,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -16269,7 +16671,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -16293,6 +16695,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -16328,9 +16743,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "product fund accounts"
+						"defaultValue": "product_fund_accounts"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -16393,7 +16811,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -16448,7 +16866,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -16459,7 +16877,7 @@
 								"datasetParameters": {
 									"FactReg28AssetAllocationsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -16490,13 +16908,19 @@
 						"type": "ExecuteDataFlow",
 						"dependsOn": [
 							{
-								"activity": "CreateFileDirectory",
+								"activity": "SetFileDirectory",
 								"dependencyConditions": [
 									"Succeeded"
 								]
 							},
 							{
 								"activity": "CreateBatchId",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "CreateFileName",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -16516,7 +16940,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -16533,7 +16957,7 @@
 									},
 									"ExportExtractedFactReg28AssetAllocationsData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -16562,14 +16986,14 @@
 						}
 					},
 					{
-						"name": "CreateFileDirectory",
+						"name": "SetFileDirectory",
 						"type": "SetVariable",
 						"dependsOn": [],
 						"userProperties": [],
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'reg28 fund allocations/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'reg28_fund_allocations/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -16603,7 +17027,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -16614,7 +17038,7 @@
 								"datasetParameters": {
 									"FactReg28AssetAllocationsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -16660,7 +17084,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -16743,7 +17167,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -16767,6 +17191,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -16802,9 +17239,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "reg28 fund allocations"
+						"defaultValue": "reg28_fund_allocations"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -16867,7 +17307,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -16934,7 +17374,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -16945,7 +17385,7 @@
 								"datasetParameters": {
 									"Reg28PolicyAllocationsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -16988,6 +17428,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -17004,7 +17450,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -17021,7 +17467,7 @@
 									},
 									"ExportExtractedReg28PolicyAllocationsData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -17057,7 +17503,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'reg28 policy allocations/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'reg28_policy_allocations/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -17094,7 +17540,7 @@
 								"datasetParameters": {
 									"Reg28PolicyAllocationsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -17142,7 +17588,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -17225,7 +17671,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -17289,7 +17735,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -17353,7 +17799,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -17377,6 +17823,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -17412,9 +17871,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "reg28 policy allocations"
+						"defaultValue": "reg28_policy_allocations"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -17477,7 +17939,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -17550,7 +18012,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -17561,7 +18023,7 @@
 								"datasetParameters": {
 									"Reg28PolicyFundAllocationsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -17605,6 +18067,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -17621,7 +18089,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -17638,7 +18106,7 @@
 									},
 									"ExportExtractedReg28PolicyFundAllocationsData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -17674,7 +18142,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'reg28 policy fund allocations/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'reg28_policy_fund_allocations/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -17711,7 +18179,7 @@
 								"datasetParameters": {
 									"Reg28PolicyFundAllocationsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -17723,20 +18191,6 @@
 									"LoadPolicyEntity": {},
 									"LoadUnitHolderEntity": {},
 									"LoadFundEntity": {}
-								},
-								"linkedServiceParameters": {
-									"Reg28PolicyFundAllocationsSource": {
-										"schemaLinkedService": {
-											"ExtractFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"ExtractFileDirectory": {
-												"value": "@variables('ExtractFileDirectory')",
-												"type": "Expression"
-											}
-										}
-									}
 								}
 							},
 							"staging": {},
@@ -17774,7 +18228,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -17858,7 +18312,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -17922,7 +18376,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -17986,7 +18440,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -18050,7 +18504,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -18074,6 +18528,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -18109,9 +18576,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "reg28 policy fund allocations"
+						"defaultValue": "reg28_policy_fund_allocations"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -18174,7 +18644,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -18235,7 +18705,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -18246,7 +18716,7 @@
 								"datasetParameters": {
 									"Reg28QuarterlySource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -18288,6 +18758,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -18304,7 +18780,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -18321,7 +18797,7 @@
 									},
 									"ExportExtractedReg28QuarterlyData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -18331,31 +18807,9 @@
 									}
 								},
 								"linkedServiceParameters": {
-									"Reg28QuarterlySource": {
-										"schemaLinkedService": {
-											"LandingFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"LandingFileDirectory": {
-												"value": "@variables('LandingFileDirectory')",
-												"type": "Expression"
-											}
-										}
-									},
 									"ExportExtractedReg28QuarterlyData": {
 										"linkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
-										},
-										"schemaLinkedService": {
-											"ExtractFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"ExtractFileDirectory": {
-												"value": "@variables('ExtractFileDirectory')",
-												"type": "Expression"
-											}
 										},
 										"rejectedDataLinkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
@@ -18379,7 +18833,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'reg28 policy quarterly/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'reg28_policy_quarterly/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -18416,7 +18870,7 @@
 								"datasetParameters": {
 									"Reg28QuarterlySource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -18463,7 +18917,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -18546,7 +19000,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -18610,7 +19064,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -18634,6 +19088,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -18669,9 +19136,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "reg28 policy quarterly"
+						"defaultValue": "reg28_policy_quarterly"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -18734,7 +19204,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -18789,7 +19259,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -18800,7 +19270,7 @@
 								"datasetParameters": {
 									"UnitHolderBankDetailsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -18841,6 +19311,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -18857,7 +19333,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -18874,7 +19350,7 @@
 									},
 									"ExportExtractedUnitHolderBankDetailsData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -18884,31 +19360,9 @@
 									}
 								},
 								"linkedServiceParameters": {
-									"UnitHolderBankDetailsSource": {
-										"schemaLinkedService": {
-											"LandingFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"LandingFileDirectory": {
-												"value": "@variables('LandingFileDirectory')",
-												"type": "Expression"
-											}
-										}
-									},
 									"ExportExtractedUnitHolderBankDetailsData": {
 										"linkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
-										},
-										"schemaLinkedService": {
-											"ExtractFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"ExtractFileDirectory": {
-												"value": "@variables('ExtractFileDirectory')",
-												"type": "Expression"
-											}
 										},
 										"rejectedDataLinkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
@@ -18932,7 +19386,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'unit holder bank details/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'unit_holder_bank_details/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -18969,7 +19423,7 @@
 								"datasetParameters": {
 									"UnitHolderBankDetailsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -19015,7 +19469,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -19097,7 +19551,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -19121,6 +19575,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -19156,9 +19623,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "unit holder bank details"
+						"defaultValue": "unit_holder_bank_details"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -19221,7 +19691,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -19276,7 +19746,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -19287,7 +19757,7 @@
 								"datasetParameters": {
 									"UnitHolderRelatedPartySource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -19328,6 +19798,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -19344,7 +19820,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -19361,7 +19837,7 @@
 									},
 									"ExportExtractedUnitHolderRelatedPartyData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -19371,31 +19847,9 @@
 									}
 								},
 								"linkedServiceParameters": {
-									"UnitHolderRelatedPartySource": {
-										"schemaLinkedService": {
-											"LandingFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"LandingFileDirectory": {
-												"value": "@variables('LandingFileDirectory')",
-												"type": "Expression"
-											}
-										}
-									},
 									"ExportExtractedUnitHolderRelatedPartyData": {
 										"linkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
-										},
-										"schemaLinkedService": {
-											"ExtractFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"ExtractFileDirectory": {
-												"value": "@variables('ExtractFileDirectory')",
-												"type": "Expression"
-											}
 										},
 										"rejectedDataLinkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
@@ -19419,7 +19873,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'unit holder related party/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'unit_holder_related_party/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -19456,7 +19910,7 @@
 								"datasetParameters": {
 									"UnitHolderRelatedPartySource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -19502,7 +19956,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -19584,7 +20038,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -19608,6 +20062,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -19643,9 +20110,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "unit holder related party"
+						"defaultValue": "unit_holder_related_party"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -19708,7 +20178,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -19763,7 +20233,7 @@
 										"type": "Expression"
 									},
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -19774,7 +20244,7 @@
 								"datasetParameters": {
 									"FactTaxFreeSavingsContributionsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -19815,6 +20285,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -19831,7 +20307,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -19848,7 +20324,7 @@
 									},
 									"ExportExtractedFactTaxFreeSavingsContributionsData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -19858,31 +20334,9 @@
 									}
 								},
 								"linkedServiceParameters": {
-									"FactTaxFreeSavingsContributionsSource": {
-										"schemaLinkedService": {
-											"LandingFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"LandingFileDirectory": {
-												"value": "@variables('LandingFileDirectory')",
-												"type": "Expression"
-											}
-										}
-									},
 									"ExportExtractedFactTaxFreeSavingsContributionsData": {
 										"linkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
-										},
-										"schemaLinkedService": {
-											"ExtractFileName": {
-												"value": "@pipeline().parameters.SourceFileName",
-												"type": "Expression"
-											},
-											"ExtractFileDirectory": {
-												"value": "@variables('ExtractFileDirectory')",
-												"type": "Expression"
-											}
 										},
 										"rejectedDataLinkedService": {
 											"ExtractFileName": "ExtractedDistribution2023-01-13T11:58:51.2875137Z"
@@ -19906,7 +20360,7 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'unit holder tax free savings contributions/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'unit_holder_tax_free_savings_contributions/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 								"type": "Expression"
 							}
 						}
@@ -19943,7 +20397,7 @@
 								"datasetParameters": {
 									"FactTaxFreeSavingsContributionsSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -19989,7 +20443,7 @@
 									"type": "Expression"
 								},
 								"file_name": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"is_atomic": {
@@ -20073,7 +20527,7 @@
 								},
 								"FileName": {
 									"value": {
-										"value": "@pipeline().parameters.SourceFileName",
+										"value": "@variables('FormattedFileName')",
 										"type": "Expression"
 									},
 									"type": "String"
@@ -20097,6 +20551,19 @@
 						"linkedServiceName": {
 							"referenceName": "pps_edw_dev_database",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -20132,9 +20599,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "unit holder tax free savings contributions"
+						"defaultValue": "unit_holder_tax_free_savings_contributions"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -20184,7 +20654,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -20195,7 +20665,7 @@
 								"datasetParameters": {
 									"CountryCodesSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -20235,6 +20705,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -20251,7 +20727,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -20268,7 +20744,7 @@
 									},
 									"ExportExtractedData": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -20294,7 +20770,20 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'country codes/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'country_codes/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
 								"type": "Expression"
 							}
 						}
@@ -20313,13 +20802,16 @@
 				"variables": {
 					"ReferenceTableName": {
 						"type": "String",
-						"defaultValue": "countr_codes"
+						"defaultValue": "country_codes"
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "country codes"
+						"defaultValue": "country_codes"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -20366,7 +20858,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -20377,7 +20869,7 @@
 								"datasetParameters": {
 									"DistributionComponentMasterSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -20417,6 +20909,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -20433,7 +20931,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -20450,7 +20948,7 @@
 									},
 									"ExportDistributionComponentMaster": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -20476,7 +20974,20 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'distribution component master/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'distribution_component_master/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
 								"type": "Expression"
 							}
 						}
@@ -20499,9 +21010,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "distribution component master"
+						"defaultValue": "distribution_component_master"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -20548,7 +21062,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -20559,7 +21073,7 @@
 								"datasetParameters": {
 									"PolicyDefaultAnnuitySourceSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -20599,6 +21113,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -20615,7 +21135,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -20632,7 +21152,7 @@
 									},
 									"ExportPolicyDefaultAnnuitySource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -20658,7 +21178,20 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'policy default annuity source/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'policy_default_annuity_source/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
 								"type": "Expression"
 							}
 						}
@@ -20681,9 +21214,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "policy default annuity source"
+						"defaultValue": "policy_default_annuity_source"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -20730,7 +21266,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"FileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									},
 									"FileDirectory": {
@@ -20741,7 +21277,7 @@
 								"datasetParameters": {
 									"TransactionSubtypesSource": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -20781,6 +21317,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "CreateFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -20797,7 +21339,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"ExtractFileName": {
-										"value": "'@{pipeline().parameters.SourceFileName}'",
+										"value": "'@{variables('FormattedFileName')}'",
 										"type": "Expression"
 									}
 								},
@@ -20814,7 +21356,7 @@
 									},
 									"ExportTransactionSubtypes": {
 										"ExtractFileName": {
-											"value": "@pipeline().parameters.SourceFileName",
+											"value": "@variables('FormattedFileName')",
 											"type": "Expression"
 										},
 										"ExtractFileDirectory": {
@@ -20840,7 +21382,20 @@
 						"typeProperties": {
 							"variableName": "ExtractFileDirectory",
 							"value": {
-								"value": "@concat(\n    'trasaction subtypes/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"value": "@concat(\n    'trasaction_subtypes/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "CreateFileName",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FormattedFileName",
+							"value": {
+								"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
 								"type": "Expression"
 							}
 						}
@@ -20863,9 +21418,12 @@
 					},
 					"LandingFileDirectory": {
 						"type": "String",
-						"defaultValue": "transaction subtypes"
+						"defaultValue": "transaction_subtypes"
 					},
 					"ExtractFileDirectory": {
+						"type": "String"
+					},
+					"FormattedFileName": {
 						"type": "String"
 					}
 				},
@@ -21970,68 +22528,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/Authorised_Representative_New_File')]",
-			"type": "Microsoft.Synapse/workspaces/triggers",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Stopped",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "edw_entity_authorised_representative_pipeline",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
-				"type": "BlobEventsTrigger",
-				"typeProperties": {
-					"blobPathBeginsWith": "/sql/blobs/landing/authorised representative/",
-					"blobPathEndsWith": ".txt",
-					"ignoreEmptyBlobs": true,
-					"scope": "[parameters('Authorised_Representative_New_File_properties_typeProperties_scope')]",
-					"events": [
-						"Microsoft.Storage.BlobCreated"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/pipelines/edw_entity_authorised_representative_pipeline')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/Broker_New_File')]",
-			"type": "Microsoft.Synapse/workspaces/triggers",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Stopped",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "edw_entity_broker_pipeline",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
-				"type": "BlobEventsTrigger",
-				"typeProperties": {
-					"blobPathBeginsWith": "/sql/blobs/landing/broker/",
-					"blobPathEndsWith": ".txt",
-					"ignoreEmptyBlobs": false,
-					"scope": "[parameters('Broker_New_File_properties_typeProperties_scope')]",
-					"events": [
-						"Microsoft.Storage.BlobCreated"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/pipelines/edw_entity_broker_pipeline')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('workspaceName'), '/AutoResolveIntegrationRuntime')]",
 			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
 			"apiVersion": "2019-06-01-preview",
@@ -22051,16 +22547,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/Chad-Local')]",
-			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"type": "SelfHosted",
-				"typeProperties": {}
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('workspaceName'), '/KeepAlive-Runtime')]",
 			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
 			"apiVersion": "2019-06-01-preview",
@@ -22071,8 +22557,8 @@
 						"location": "AutoResolve",
 						"dataFlowProperties": {
 							"computeType": "General",
-							"coreCount": 32,
-							"timeToLive": 30,
+							"coreCount": 8,
+							"timeToLive": 5,
 							"cleanup": false,
 							"customProperties": []
 						}
@@ -40118,7 +40604,7 @@
 					],
 					"scriptLines": [
 						"parameters{",
-						"     BatchId as string,",
+						"     BatchId as string ('f14bcdce-1d0c-46b7-b9f3-dbe77107f3e8'),",
 						"     FileName as string,",
 						"     FileDirectory as string",
 						"}",
@@ -40155,7 +40641,7 @@
 						"FactReg28AssetAllocationsSource derive(BatchId = $BatchId,",
 						"          Provider = \"PPS\",",
 						"          DataSource = \"Reg28 Fund Allocations Static Data\") ~> DerivedColumn",
-						"FundLookup assert(expectTrue(!isNull(JSECode) && !isNull(QuarterEndDate), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
+						"FundLookup assert(expectTrue(!isNull(JSECode) && !isNull(QuarterEndDate) && !isNull(StoreFundId), false, 'IsValid', null, \"Check data validity\")) ~> ValidateData",
 						"ValidateData derive(IsValid = !isError()) ~> DeriveValidColumn",
 						"DeriveValidColumn filter(IsValid == false()) ~> FilterInvalidData",
 						"DerivedColumn, FundEntityTable lookup(JSECode == StoreJSECode,",
