@@ -42563,8 +42563,8 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Copy data1",
-						"type": "Copy",
+						"name": "GetZipFileNames",
+						"type": "GetMetadata",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -42575,63 +42575,133 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"source": {
-								"type": "BinarySource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true
-								},
-								"formatSettings": {
-									"type": "BinaryReadSettings",
-									"compressionProperties": {
-										"type": "ZipDeflateReadSettings"
-									}
-								}
-							},
-							"sink": {
-								"type": "BinarySink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings",
-									"copyBehavior": "PreserveHierarchy"
-								}
-							},
-							"enableStaging": false
-						},
-						"inputs": [
-							{
+							"dataset": {
 								"referenceName": "history_files_zipped",
 								"type": "DatasetReference",
-								"parameters": {
-									"FileName": {
-										"value": "@variables('FileName')",
-										"type": "Expression"
-									}
-								}
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
 							}
-						],
-						"outputs": [
-							{
-								"referenceName": "history_files_unzipped",
-								"type": "DatasetReference",
-								"parameters": {
-									"FileName": "aa"
-								}
-							}
-						]
+						}
 					},
 					{
-						"name": "Lookup1",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
+						"name": "AppendFileNames",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "GetZipFileNames",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"userProperties": [],
-						"typeProperties": {}
+						"typeProperties": {
+							"items": {
+								"value": "@activity('GetZipFileNames').output.childItems",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Append variable1",
+									"type": "AppendVariable",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "ZipFileList",
+										"value": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "UnzipAndCopyFiles",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "AppendFileNames",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@variables('ZipFileList')",
+								"type": "Expression"
+							},
+							"batchCount": 10,
+							"activities": [
+								{
+									"name": "UnzipAndCopyFile",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "BinarySource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true
+											},
+											"formatSettings": {
+												"type": "BinaryReadSettings",
+												"compressionProperties": {
+													"type": "ZipDeflateReadSettings"
+												}
+											}
+										},
+										"sink": {
+											"type": "BinarySink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings",
+												"copyBehavior": "PreserveHierarchy"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "history_files_zipped_file",
+											"type": "DatasetReference",
+											"parameters": {
+												"FileName": {
+													"value": "@item()",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "history_files_unzipped",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								}
+							]
+						}
 					}
 				],
 				"policy": {
@@ -42642,17 +42712,21 @@
 					"FileName": {
 						"type": "String",
 						"defaultValue": "Intia2021_04_01_03-46-37.zip"
+					},
+					"ZipFileList": {
+						"type": "Array"
 					}
 				},
 				"annotations": []
 			},
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/datasets/history_files_zipped')]",
+				"[concat(variables('workspaceId'), '/datasets/history_files_zipped_file')]",
 				"[concat(variables('workspaceId'), '/datasets/history_files_unzipped')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/history_files_zipped')]",
+			"name": "[concat(parameters('workspaceName'), '/history_files_zipped_file')]",
 			"type": "Microsoft.Synapse/workspaces/datasets",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -42695,11 +42769,6 @@
 					"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
 					"type": "LinkedServiceReference"
 				},
-				"parameters": {
-					"FileName": {
-						"type": "string"
-					}
-				},
 				"annotations": [],
 				"type": "Binary",
 				"typeProperties": {
@@ -42720,7 +42789,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Stopped",
+				"runtimeState": "Started",
 				"pipelines": [
 					{
 						"pipelineReference": {
@@ -42745,6 +42814,32 @@
 			},
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/pipelines/edw_entity_broker_pipeline')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/history_files_zipped')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "Archive",
+						"fileSystem": "sql"
+					},
+					"compression": {
+						"type": "ZipDeflate"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/pps-synapse-dev-WorkspaceDefaultStorage')]"
 			]
 		}
 	]
