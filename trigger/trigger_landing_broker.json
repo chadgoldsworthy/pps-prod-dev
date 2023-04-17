@@ -3,7 +3,17 @@
 	"properties": {
 		"annotations": [],
 		"runtimeState": "Started",
-		"pipelines": [],
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "edw_entity_broker_pipeline",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"SourceFileName": "@triggerBody().fileName"
+				}
+			}
+		],
 		"type": "BlobEventsTrigger",
 		"typeProperties": {
 			"blobPathBeginsWith": "/sql/blobs/landing/broker/",
