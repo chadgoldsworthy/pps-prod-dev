@@ -1,5 +1,5 @@
 {
-	"name": "history_files_unzipped",
+	"name": "history_files_zipped",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
@@ -10,8 +10,11 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"folderPath": "history_unzipped",
+				"folderPath": "Archive",
 				"fileSystem": "sql"
+			},
+			"compression": {
+				"type": "ZipDeflate"
 			}
 		}
 	}

@@ -1,5 +1,5 @@
 {
-	"name": "history_files_zipped",
+	"name": "history_files_zipped_file",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
