@@ -172,7 +172,7 @@
 			},
 			"LandingFileDirectory": {
 				"type": "String",
-				"defaultValue": "country codes"
+				"defaultValue": "country_codes"
 			},
 			"ExtractFileDirectory": {
 				"type": "String"
