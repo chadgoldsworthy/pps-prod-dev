@@ -1,0 +1,23 @@
+{
+	"name": "history_files_unzipped",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"FileName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "history_unzipped",
+				"fileSystem": "sql"
+			}
+		}
+	}
+}

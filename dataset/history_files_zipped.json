@@ -1,0 +1,30 @@
+{
+	"name": "history_files_zipped",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "pps-synapse-dev-WorkspaceDefaultStorage",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"FileName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().FileName",
+					"type": "Expression"
+				},
+				"folderPath": "Archive",
+				"fileSystem": "sql"
+			},
+			"compression": {
+				"type": "ZipDeflate"
+			}
+		}
+	}
+}
