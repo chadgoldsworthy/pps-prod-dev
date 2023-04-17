@@ -166,7 +166,7 @@
 						"type": "DataFlowReference",
 						"parameters": {
 							"ExtractFileName": {
-								"value": "'@{pipeline().parameters.SourceFileName}'",
+								"value": "'@{variables('FormattedFileName')}'",
 								"type": "Expression"
 							}
 						},
@@ -458,7 +458,7 @@
 			},
 			"LandingFileDirectory": {
 				"type": "String",
-				"defaultValue": "reg28 fund allocations"
+				"defaultValue": "reg28_fund_allocations"
 			},
 			"ExtractFileDirectory": {
 				"type": "String"

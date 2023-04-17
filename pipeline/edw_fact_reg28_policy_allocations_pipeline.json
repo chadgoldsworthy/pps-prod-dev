@@ -40,7 +40,7 @@
 						},
 						"FileName": {
 							"value": {
-								"value": "@pipeline().parameters.SourceFileName",
+								"value": "@variables('FormattedFileName')",
 								"type": "Expression"
 							},
 							"type": "String"
@@ -107,7 +107,7 @@
 								"type": "Expression"
 							},
 							"FileName": {
-								"value": "'@{pipeline().parameters.SourceFileName}'",
+								"value": "'@{variables('FormattedFileName')}'",
 								"type": "Expression"
 							},
 							"FileDirectory": {
@@ -118,7 +118,7 @@
 						"datasetParameters": {
 							"Reg28PolicyAllocationsSource": {
 								"ExtractFileName": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"ExtractFileDirectory": {
@@ -178,7 +178,7 @@
 						"type": "DataFlowReference",
 						"parameters": {
 							"ExtractFileName": {
-								"value": "'@{pipeline().parameters.SourceFileName}'",
+								"value": "'@{variables('FormattedFileName')}'",
 								"type": "Expression"
 							}
 						},
@@ -195,7 +195,7 @@
 							},
 							"ExportExtractedReg28PolicyAllocationsData": {
 								"ExtractFileName": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"ExtractFileDirectory": {
@@ -230,7 +230,7 @@
 				"typeProperties": {
 					"variableName": "ExtractFileDirectory",
 					"value": {
-						"value": "@concat(\n    'reg28 policy allocations/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+						"value": "@concat(\n    'reg28_policy_allocations/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
 						"type": "Expression"
 					}
 				}
@@ -267,7 +267,7 @@
 						"datasetParameters": {
 							"Reg28PolicyAllocationsSource": {
 								"ExtractFileName": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"ExtractFileDirectory": {
@@ -311,7 +311,7 @@
 							"type": "Expression"
 						},
 						"file_name": {
-							"value": "@pipeline().parameters.SourceFileName",
+							"value": "@variables('FormattedFileName')",
 							"type": "Expression"
 						},
 						"is_atomic": {
@@ -394,7 +394,7 @@
 						},
 						"FileName": {
 							"value": {
-								"value": "@pipeline().parameters.SourceFileName",
+								"value": "@variables('FormattedFileName')",
 								"type": "Expression"
 							},
 							"type": "String"
@@ -458,7 +458,7 @@
 						},
 						"FileName": {
 							"value": {
-								"value": "@pipeline().parameters.SourceFileName",
+								"value": "@variables('FormattedFileName')",
 								"type": "Expression"
 							},
 							"type": "String"
@@ -522,7 +522,7 @@
 						},
 						"FileName": {
 							"value": {
-								"value": "@pipeline().parameters.SourceFileName",
+								"value": "@variables('FormattedFileName')",
 								"type": "Expression"
 							},
 							"type": "String"
@@ -552,7 +552,14 @@
 				"name": "CreateFileName",
 				"type": "SetVariable",
 				"dependsOn": [],
-				"userProperties": []
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "FormattedFileName",
+					"value": {
+						"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
+						"type": "Expression"
+					}
+				}
 			}
 		],
 		"parameters": {
@@ -583,7 +590,7 @@
 			},
 			"LandingFileDirectory": {
 				"type": "String",
-				"defaultValue": "reg28 policy allocations"
+				"defaultValue": "reg28_policy_allocations"
 			},
 			"ExtractFileDirectory": {
 				"type": "String"
