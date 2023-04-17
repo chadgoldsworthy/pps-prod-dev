@@ -59,7 +59,7 @@
 			],
 			"scriptLines": [
 				"parameters{",
-				"     BatchId as string,",
+				"     BatchId as string ('f14bcdce-1d0c-46b7-b9f3-dbe77107f3e8'),",
 				"     FileName as string,",
 				"     FileDirectory as string",
 				"}",

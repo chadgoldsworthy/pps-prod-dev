@@ -27,7 +27,7 @@
 						"type": "DataFlowReference",
 						"parameters": {
 							"FileName": {
-								"value": "'@{pipeline().parameters.SourceFileName}'",
+								"value": "'@{variables('FormattedFileName')}'",
 								"type": "Expression"
 							},
 							"FileDirectory": {
@@ -38,7 +38,7 @@
 						"datasetParameters": {
 							"DistributionComponentMasterSource": {
 								"ExtractFileName": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"ExtractFileDirectory": {
@@ -76,6 +76,12 @@
 						"dependencyConditions": [
 							"Succeeded"
 						]
+					},
+					{
+						"activity": "CreateFileName",
+						"dependencyConditions": [
+							"Succeeded"
+						]
 					}
 				],
 				"policy": {
@@ -92,7 +98,7 @@
 						"type": "DataFlowReference",
 						"parameters": {
 							"ExtractFileName": {
-								"value": "'@{pipeline().parameters.SourceFileName}'",
+								"value": "'@{variables('FormattedFileName')}'",
 								"type": "Expression"
 							}
 						},
@@ -109,7 +115,7 @@
 							},
 							"ExportDistributionComponentMaster": {
 								"ExtractFileName": {
-									"value": "@pipeline().parameters.SourceFileName",
+									"value": "@variables('FormattedFileName')",
 									"type": "Expression"
 								},
 								"ExtractFileDirectory": {
@@ -134,7 +140,20 @@
 				"typeProperties": {
 					"variableName": "ExtractFileDirectory",
 					"value": {
-						"value": "@concat(\n    'distribution component master/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+						"value": "@concat(\n    'distribution_component_master/', \n    formatDateTime(utcNow(), 'yyyy'), \n    '/',\n    formatDateTime(utcNow(), 'MM'), \n    '/',\n    formatDateTime(utcNow(), 'dd')\n)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "CreateFileName",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "FormattedFileName",
+					"value": {
+						"value": "@concat(\n    replace(pipeline().parameters.SourceFileName, '.txt', ''),\n    '_UTC_',\n    utcnow('yyyy_MM_dd_HH_mm_ss'),\n    '.txt'\n    )",
 						"type": "Expression"
 					}
 				}
@@ -153,9 +172,12 @@
 			},
 			"LandingFileDirectory": {
 				"type": "String",
-				"defaultValue": "distribution component master"
+				"defaultValue": "distribution_component_master"
 			},
 			"ExtractFileDirectory": {
+				"type": "String"
+			},
+			"FormattedFileName": {
 				"type": "String"
 			}
 		},
