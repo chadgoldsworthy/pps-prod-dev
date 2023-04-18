@@ -46,6 +46,10 @@
 		"trigger_landing_brokerage_properties_typeProperties_scope": {
 			"type": "string",
 			"defaultValue": "/subscriptions/e2aafd3f-2b28-4040-aa01-e0c618a3b3f8/resourceGroups/PPSI_Data_Enablement_STG/providers/Microsoft.Storage/storageAccounts/ppsidatalakestg"
+		},
+		"trigger_landing_entity_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/e2aafd3f-2b28-4040-aa01-e0c618a3b3f8/resourceGroups/PPSI_Data_Enablement_STG/providers/Microsoft.Storage/storageAccounts/ppsidatalakestg"
 		}
 	},
 	"variables": {
@@ -22831,6 +22835,39 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/trigger_landing_brokerage')]",
+			"type": "Microsoft.Synapse/workspaces/triggers",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "edw_entity_brokerage_pipeline",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"SourceFileName": "[parameters('trigger_landing_brokerage_properties_edw_entity_brokerage_pipeline_parameters_SourceFileName')]"
+						}
+					}
+				],
+				"type": "BlobEventsTrigger",
+				"typeProperties": {
+					"blobPathBeginsWith": "/sql/blobs/landing/brokerage",
+					"blobPathEndsWith": ".txt",
+					"ignoreEmptyBlobs": true,
+					"scope": "[parameters('trigger_landing_brokerage_properties_typeProperties_scope')]",
+					"events": [
+						"Microsoft.Storage.BlobCreated"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/pipelines/edw_entity_brokerage_pipeline')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/AutoResolveIntegrationRuntime')]",
 			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
 			"apiVersion": "2019-06-01-preview",
@@ -42852,7 +42889,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/trigger_landing_brokerage')]",
+			"name": "[concat(parameters('workspaceName'), '/trigger_landing_entity')]",
 			"type": "Microsoft.Synapse/workspaces/triggers",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -42861,27 +42898,25 @@
 				"pipelines": [
 					{
 						"pipelineReference": {
-							"referenceName": "edw_entity_brokerage_pipeline",
+							"referenceName": "edw_entity_entity_pipeline",
 							"type": "PipelineReference"
 						},
-						"parameters": {
-							"SourceFileName": "[parameters('trigger_landing_brokerage_properties_edw_entity_brokerage_pipeline_parameters_SourceFileName')]"
-						}
+						"parameters": {}
 					}
 				],
 				"type": "BlobEventsTrigger",
 				"typeProperties": {
-					"blobPathBeginsWith": "/sql/blobs/landing/brokerage",
+					"blobPathBeginsWith": "/sql/blobs/landing/entity/",
 					"blobPathEndsWith": ".txt",
 					"ignoreEmptyBlobs": true,
-					"scope": "[parameters('trigger_landing_brokerage_properties_typeProperties_scope')]",
+					"scope": "[parameters('trigger_landing_entity_properties_typeProperties_scope')]",
 					"events": [
 						"Microsoft.Storage.BlobCreated"
 					]
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('workspaceId'), '/pipelines/edw_entity_brokerage_pipeline')]"
+				"[concat(variables('workspaceId'), '/pipelines/edw_entity_entity_pipeline')]"
 			]
 		}
 	]

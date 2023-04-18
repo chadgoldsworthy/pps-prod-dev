@@ -34,6 +34,9 @@
 		},
 		"trigger_landing_brokerage_properties_typeProperties_scope": {
 			"value": "/subscriptions/e2aafd3f-2b28-4040-aa01-e0c618a3b3f8/resourceGroups/PPSI_Data_Enablement_STG/providers/Microsoft.Storage/storageAccounts/ppsidatalakestg"
+		},
+		"trigger_landing_entity_properties_typeProperties_scope": {
+			"value": "/subscriptions/e2aafd3f-2b28-4040-aa01-e0c618a3b3f8/resourceGroups/PPSI_Data_Enablement_STG/providers/Microsoft.Storage/storageAccounts/ppsidatalakestg"
 		}
 	}
 }
