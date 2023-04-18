@@ -635,7 +635,7 @@
 		"parameters": {
 			"SourceFileName": {
 				"type": "string",
-				"defaultValue": "DailyHoldingsShort.txt"
+				"defaultValue": "DailyHoldings20211231231431.txt"
 			}
 		},
 		"variables": {
