@@ -495,7 +495,7 @@
 		"parameters": {
 			"SourceFileName": {
 				"type": "string",
-				"defaultValue": "PolicyBroker20220922233723.txt"
+				"defaultValue": "PolicyBroker20211231231431.txt"
 			}
 		},
 		"variables": {

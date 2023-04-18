@@ -724,7 +724,7 @@
 		"parameters": {
 			"SourceFileName": {
 				"type": "string",
-				"defaultValue": "Beneficiary_Delete_Example.txt"
+				"defaultValue": "Beneficiary20211231231431.txt"
 			}
 		},
 		"variables": {
