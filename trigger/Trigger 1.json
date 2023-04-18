@@ -6,8 +6,8 @@
 		"pipelines": [],
 		"type": "CustomEventsTrigger",
 		"typeProperties": {
-			"subjectEndsWith": ".txt",
-			"subjectBeginsWith": "landing/broker/",
+			"subjectEndsWith": "",
+			"subjectBeginsWith": "",
 			"scope": "/subscriptions/e2aafd3f-2b28-4040-aa01-e0c618a3b3f8/resourceGroups/PPSI_Data_Enablement_STG/providers/Microsoft.EventGrid/topics/ppsi-event-grid",
 			"events": [
 				"new blob"
