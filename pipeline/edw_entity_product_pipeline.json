@@ -438,7 +438,7 @@
 		"parameters": {
 			"SourceFileName": {
 				"type": "string",
-				"defaultValue": "Product20220923081213.txt"
+				"defaultValue": "Product20211231231431.txt"
 			}
 		},
 		"variables": {

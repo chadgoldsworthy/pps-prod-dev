@@ -162,7 +162,7 @@
 		"parameters": {
 			"SourceFileName": {
 				"type": "string",
-				"defaultValue": "CountryCode20220922233723.txt"
+				"defaultValue": "CountryCode20211231231431.txt"
 			}
 		},
 		"variables": {

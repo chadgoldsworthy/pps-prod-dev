@@ -621,7 +621,7 @@
 		"parameters": {
 			"SourceFileName": {
 				"type": "string",
-				"defaultValue": "Policy20220922233723.txt"
+				"defaultValue": "Policy20211231231431.txt"
 			}
 		},
 		"variables": {
