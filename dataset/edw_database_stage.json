@@ -31,97 +31,52 @@
 				"type": "varchar"
 			},
 			{
-				"name": "UnitHolderId",
-				"type": "bigint",
-				"precision": 19
-			},
-			{
-				"name": "ProductId",
-				"type": "bigint",
-				"precision": 19
-			},
-			{
 				"name": "FundId",
 				"type": "bigint",
 				"precision": 19
 			},
 			{
-				"name": "PolicyId",
-				"type": "bigint",
-				"precision": 19
-			},
-			{
-				"name": "LoadId",
-				"type": "bigint",
-				"precision": 19
-			},
-			{
-				"name": "PolicyNumber",
+				"name": "FundCode",
 				"type": "varchar"
 			},
 			{
-				"name": "PolicyTransactionNumber",
-				"type": "bigint",
-				"precision": 19
-			},
-			{
-				"name": "FeeCode",
-				"type": "bigint",
-				"precision": 19
-			},
-			{
-				"name": "FeeDescription",
+				"name": "DistributionComponentCode",
 				"type": "varchar"
 			},
 			{
-				"name": "FeePercentage",
+				"name": "DistributionComponentName",
+				"type": "varchar"
+			},
+			{
+				"name": "DistributionNumber",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "DistributionDate",
+				"type": "date"
+			},
+			{
+				"name": "DistributionComponentCPU",
 				"type": "decimal",
-				"precision": 20,
+				"precision": 10,
 				"scale": 5
 			},
 			{
-				"name": "FundTransactionNumber",
-				"type": "bigint",
-				"precision": 19
+				"name": "FreezeHoldingDate",
+				"type": "date"
 			},
 			{
-				"name": "Amount",
-				"type": "decimal",
-				"precision": 20,
-				"scale": 5
-			},
-			{
-				"name": "ReversalIndicator",
+				"name": "FactFundDistributionKey",
 				"type": "varchar"
 			},
 			{
-				"name": "OldTransactionNumber",
+				"name": "FundKey",
 				"type": "varchar"
 			},
 			{
-				"name": "FactFundFeeTransactionKey",
-				"type": "bigint",
-				"precision": 19
-			},
-			{
-				"name": "ProductKey",
-				"type": "bigint",
-				"precision": 19
-			},
-			{
-				"name": "PolicyKey",
-				"type": "bigint",
-				"precision": 19
-			},
-			{
-				"name": "UnitHolderKey",
-				"type": "bigint",
-				"precision": 19
-			},
-			{
-				"name": "LoadKey",
-				"type": "bigint",
-				"precision": 19
+				"name": "DistributionComponentKey",
+				"type": "varchar"
 			},
 			{
 				"name": "IsValid",

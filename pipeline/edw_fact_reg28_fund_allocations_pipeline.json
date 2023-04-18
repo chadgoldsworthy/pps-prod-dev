@@ -372,7 +372,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"storedProcedureName": "[stage].[load_fact_product_fund_accounts]",
+					"storedProcedureName": "[stage].[load_entity_all_fund]",
 					"storedProcedureParameters": {
 						"BatchId": {
 							"value": {
