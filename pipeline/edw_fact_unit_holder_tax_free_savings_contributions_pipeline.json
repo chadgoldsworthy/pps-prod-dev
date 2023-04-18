@@ -426,7 +426,7 @@
 		"parameters": {
 			"SourceFileName": {
 				"type": "string",
-				"defaultValue": "TFSContributions20220922233723.txt"
+				"defaultValue": "TFSContributions20211231231431.txt"
 			}
 		},
 		"variables": {
