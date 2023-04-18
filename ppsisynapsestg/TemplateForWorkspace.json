@@ -30,30 +30,6 @@
 		"pps-synapse-dev-WorkspaceDefaultStorage_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://ppsidatalakestg.dfs.core.windows.net"
-		},
-		"trigger_landing_broker_properties_edw_entity_broker_pipeline_parameters_SourceFileName": {
-			"type": "string",
-			"defaultValue": "@trigger().outputs.body.fileName"
-		},
-		"trigger_landing_broker_properties_typeProperties_scope": {
-			"type": "string",
-			"defaultValue": "/subscriptions/e2aafd3f-2b28-4040-aa01-e0c618a3b3f8/resourceGroups/PPSI_Data_Enablement_STG/providers/Microsoft.Storage/storageAccounts/ppsidatalakestg"
-		},
-		"trigger_landing_brokerage_properties_edw_entity_brokerage_pipeline_parameters_SourceFileName": {
-			"type": "string",
-			"defaultValue": "@trigger().outputs.body.fileName"
-		},
-		"trigger_landing_brokerage_properties_typeProperties_scope": {
-			"type": "string",
-			"defaultValue": "/subscriptions/e2aafd3f-2b28-4040-aa01-e0c618a3b3f8/resourceGroups/PPSI_Data_Enablement_STG/providers/Microsoft.Storage/storageAccounts/ppsidatalakestg"
-		},
-		"trigger_landing_entity_properties_typeProperties_scope": {
-			"type": "string",
-			"defaultValue": "/subscriptions/e2aafd3f-2b28-4040-aa01-e0c618a3b3f8/resourceGroups/PPSI_Data_Enablement_STG/providers/Microsoft.Storage/storageAccounts/ppsidatalakestg"
-		},
-		"trigger_landing_fund_properties_typeProperties_scope": {
-			"type": "string",
-			"defaultValue": "/subscriptions/e2aafd3f-2b28-4040-aa01-e0c618a3b3f8/resourceGroups/PPSI_Data_Enablement_STG/providers/Microsoft.Storage/storageAccounts/ppsidatalakestg"
 		}
 	},
 	"variables": {
@@ -4728,7 +4704,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "Distribution20220922233723.txt"
+						"defaultValue": "Distribution20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -5216,7 +5192,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "PriceShort.txt"
+						"defaultValue": "Price20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -5848,7 +5824,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "InitialPolicyFundRatio20220922233723.txt"
+						"defaultValue": "InitialPolicyFundRatio20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -6219,7 +6195,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "Load20220922233723.txt"
+						"defaultValue": "Load20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -7014,7 +6990,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "Beneficiary_Delete_Example.txt"
+						"defaultValue": "Beneficiary20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -7582,7 +7558,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "PolicyBroker20220922233723.txt"
+						"defaultValue": "PolicyBroker20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -8212,7 +8188,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "PolicyCession20220922233723.txt"
+						"defaultValue": "PolicyCession20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -8918,7 +8894,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "Deal20220922233723.txt"
+						"defaultValue": "Deal20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -9627,7 +9603,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "DistributionComponent20220922233723.txt"
+						"defaultValue": "DistributionComponent20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -10259,7 +10235,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "FeeStatement20220922233723.txt"
+						"defaultValue": "FeeStatement20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -11113,7 +11089,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "CommStatementSmall.txt"
+						"defaultValue": "CommStatement20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -11817,7 +11793,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "DailyHoldingsShort.txt"
+						"defaultValue": "DailyHoldings20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -12591,7 +12567,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "TransactionFee20220922233723.txt"
+						"defaultValue": "TransactionFee20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -13473,7 +13449,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "FundTransactionDeletedShort.txt"
+						"defaultValue": "FundTransaction20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -14276,7 +14252,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "LivesAssuredDeleted.txt"
+						"defaultValue": "LivesAssured20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -14915,7 +14891,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "Payee20220922233723 (1).txt"
+						"defaultValue": "Payee20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -15620,7 +15596,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "SIAllocation20220922233723.txt"
+						"defaultValue": "SIAllocation20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -16181,7 +16157,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "StandingInstructionFullSeq.txt"
+						"defaultValue": "StandingInstruction20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -16742,7 +16718,7 @@
 				"parameters": {
 					"SourceFileName": {
 						"type": "string",
-						"defaultValue": "ProductFund20220922233723.txt"
+						"defaultValue": "ProductFund20211231231431.txt"
 					}
 				},
 				"variables": {
@@ -22803,134 +22779,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/integrationRuntimes/KeepAlive-Runtime')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/trigger_landing_broker')]",
-			"type": "Microsoft.Synapse/workspaces/triggers",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "edw_entity_broker_pipeline",
-							"type": "PipelineReference"
-						},
-						"parameters": {
-							"SourceFileName": "[parameters('trigger_landing_broker_properties_edw_entity_broker_pipeline_parameters_SourceFileName')]"
-						}
-					}
-				],
-				"type": "BlobEventsTrigger",
-				"typeProperties": {
-					"blobPathBeginsWith": "/sql/blobs/landing/broker/",
-					"blobPathEndsWith": ".txt",
-					"ignoreEmptyBlobs": true,
-					"scope": "[parameters('trigger_landing_broker_properties_typeProperties_scope')]",
-					"events": [
-						"Microsoft.Storage.BlobCreated"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/pipelines/edw_entity_broker_pipeline')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/trigger_landing_brokerage')]",
-			"type": "Microsoft.Synapse/workspaces/triggers",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "edw_entity_brokerage_pipeline",
-							"type": "PipelineReference"
-						},
-						"parameters": {
-							"SourceFileName": "[parameters('trigger_landing_brokerage_properties_edw_entity_brokerage_pipeline_parameters_SourceFileName')]"
-						}
-					}
-				],
-				"type": "BlobEventsTrigger",
-				"typeProperties": {
-					"blobPathBeginsWith": "/sql/blobs/landing/brokerage",
-					"blobPathEndsWith": ".txt",
-					"ignoreEmptyBlobs": true,
-					"scope": "[parameters('trigger_landing_brokerage_properties_typeProperties_scope')]",
-					"events": [
-						"Microsoft.Storage.BlobCreated"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/pipelines/edw_entity_brokerage_pipeline')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/trigger_landing_entity')]",
-			"type": "Microsoft.Synapse/workspaces/triggers",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "edw_entity_entity_pipeline",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
-				"type": "BlobEventsTrigger",
-				"typeProperties": {
-					"blobPathBeginsWith": "/sql/blobs/landing/entity/",
-					"blobPathEndsWith": ".txt",
-					"ignoreEmptyBlobs": true,
-					"scope": "[parameters('trigger_landing_entity_properties_typeProperties_scope')]",
-					"events": [
-						"Microsoft.Storage.BlobCreated"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/pipelines/edw_entity_entity_pipeline')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/trigger_landing_fund')]",
-			"type": "Microsoft.Synapse/workspaces/triggers",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "edw_entity_fund_pipeline",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
-				"type": "BlobEventsTrigger",
-				"typeProperties": {
-					"blobPathBeginsWith": "/sql/blobs/landing/fund/",
-					"blobPathEndsWith": ".txt",
-					"ignoreEmptyBlobs": true,
-					"scope": "[parameters('trigger_landing_fund_properties_typeProperties_scope')]",
-					"events": [
-						"Microsoft.Storage.BlobCreated"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/pipelines/edw_entity_fund_pipeline')]"
 			]
 		},
 		{
