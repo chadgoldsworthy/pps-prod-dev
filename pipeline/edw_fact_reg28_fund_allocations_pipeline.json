@@ -433,7 +433,7 @@
 		"parameters": {
 			"SourceFileName": {
 				"type": "string",
-				"defaultValue": "Reg28AssetAlloc20220922233723.txt"
+				"defaultValue": "Reg28AssetAlloc20211231231431.txt"
 			}
 		},
 		"variables": {
