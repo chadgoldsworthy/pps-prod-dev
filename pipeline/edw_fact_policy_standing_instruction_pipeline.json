@@ -496,7 +496,7 @@
 		"parameters": {
 			"SourceFileName": {
 				"type": "string",
-				"defaultValue": "StandingInstructionFullSeq.txt"
+				"defaultValue": "StandingInstruction20211231231431.txt"
 			}
 		},
 		"variables": {
